@@ -34,7 +34,10 @@ class ASTResolver implements Builder {
     final astJson = jsonDecoder.convert(inputString);
 
     final enumAssetId = inputId.changeExtension(outputs[Infix.e.index]);
-    await step.writeAsString(enumAssetId, Decl.fromJson(astJson).concatTree(<String>[], 0));
+
+    final str = Decl.fromJson(astJson).concatTree(<String>[], 0, log);
+
+    await step.writeAsString(enumAssetId, str);
 
     final functionAssetId = inputId.changeExtension(outputs[Infix.f.index]);
     await step.writeAsString(functionAssetId, '''test start''');

@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:logging/logging.dart' show Logger;
+
 
 part 'serializers_generated.dart';
 
@@ -26,16 +28,25 @@ class Decl {
 
   @override
   String toString() {
-    return """${kind} ${type}""";
+    return """${id} ${kind} ${type}""";
   }
 
-  String concatTree(List<String> group, int depth) {
+  String concatTree(List<String> group, int depth, [Logger logger]) {
 
-    group.add("  " * depth);
-    group.add(toString());
+    final str = ("  " * depth) + toString();
+
+    if (logger != null) {
+      logger.info(str);
+    }
+
+    group.add(str);
 
     if (inner != null) {
-      inner.forEach((n) { n.concatTree(group, depth+1); });
+      switch(kind) {
+        case "FunctionDecl" : break;
+        default:
+          inner.forEach((n) { n.concatTree(group, depth + 1, logger); });
+      }
     }
 
     return group.join("\n");

@@ -35,7 +35,7 @@ Decl _$DeclFromJson(Map<String, dynamic> json) {
         ? null
         : Type.fromJson(json['type'] as Map<String, dynamic>),
     valueCategory: json['valueCategory'] as String,
-//    value: json['value'] as String, // TODO investigate why this was causing a casting error
+    value: "IntegerLiteral" == (json["kind"] as String) ? json['value'] as String : null,
   );
 }
 
