@@ -8,11 +8,11 @@ targets:
       dart_ast_json|resolver: # put AST JSON on a diet
         enabled: True
       dart_ast_json|functionBuilder: # functions
-        enabled: False
+        enabled: True
       dart_ast_json|structBuilder: # structs
-        enabled: False
+        enabled: True
       dart_ast_json|enumBuilder: # enums
-        enabled: False
+        enabled: True
 
 builders:
   resolver:
@@ -20,32 +20,32 @@ builders:
     builder_factories: ['resolver']
     build_extensions:
       .json:
-        - .e.json
-        - .f.json
-        - .s.json
+        - .ejson
+        - .fjson
+        - .sjson
     auto_apply: dependents
     build_to: cache
   enumBuilder:
     import: 'package:dart_ast_json/generators.dart'
     builder_factories: ['enumBuilder']
     build_extensions:
-      "$lib$": [ ".e.g.dart" ]
-    required_inputs: ['.e.json']
+      "$lib$": [ ".e.dart" ]
+    required_inputs: ['.ejson']
     auto_apply: dependents
     build_to: source
   functionBuilder:
     import: 'package:dart_ast_json/generators.dart'
     builder_factories: ['functionBuilder']
     build_extensions:
-      "$lib$": [ ".f.g.dart" ]
-    required_inputs: ['.f.json']
+      "$lib$": [ ".f.dart" ]
+    required_inputs: ['.fjson']
     auto_apply: dependents
     build_to: source
   structBuilder:
     import: 'package:dart_ast_json/generators.dart'
     builder_factories: ['structBuilder']
     build_extensions:
-      "$lib$": [ ".s.g.dart" ]
-    required_inputs: ['.s.json']
+      "$lib$": [ ".s.dart" ]
+    required_inputs: ['.sjson']
     auto_apply: dependents
     build_to: source

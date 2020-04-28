@@ -27,5 +27,4 @@ doc/api/
 # IDE
 .idea
 .eclipse
-ast/
-json/
+web

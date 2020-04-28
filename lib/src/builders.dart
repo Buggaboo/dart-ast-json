@@ -3,20 +3,21 @@ import 'dart:convert' show JsonDecoder, JsonEncoder;
 import 'package:glob/glob.dart';
 
 import 'package:dart_ast_json/src/serializers.dart';
+import 'package:dart_ast_json/src/code_generators.dart';
+
+final jsonDecoder = JsonDecoder();
+final jsonEncoder = JsonEncoder();
 
 enum Infix {
   e, f, s
 }
 
-// TODO put in a util in the future
-String removeTag(Infix i) => i.toString().substring(i.toString().indexOf('.')+1);
+String _removeTag(Infix i) => i.toString().substring(i.toString().indexOf('.')+1);
 
 class ASTResolver implements Builder {
 
-  static final outputs = Infix.values.map((s) => '''.${removeTag(s)}.json''').toList();
+  static final outputs = Infix.values.map((s) => '''.${_removeTag(s)}json''').toList();
 
-  static final jsonDecoder = JsonDecoder();
-  static final jsonEncoder = JsonEncoder();
 
   @override
   final buildExtensions = {
@@ -63,11 +64,13 @@ abstract class _Builder implements Builder {
 
   final Infix infix;
 
+  String get output => '.${_removeTag(this.infix)}.dart';
+
   const _Builder(this.infix);
 
   get _buildExtensions {
-    final untagged = removeTag(this.infix);
-    return {'''.${untagged}.json''' : [''''.${untagged}.g.dart''']};
+    final untagged = _removeTag(this.infix);
+    return {'''.${untagged}json''' : [output]};
   }
 
   @override
@@ -81,6 +84,14 @@ class EnumBuilder extends _Builder {
 
   @override
   Future<void> build(BuildStep step) async {
+    final inputId = step.inputId;
+    final inputString = await step.readAsString(inputId);
+    final listOfMaps = jsonDecoder.convert(inputString);
+
+    final enumDecls = listOfMaps.map((m) => Decl.fromJson(m)).toList();
+
+    await step.writeAsString(inputId.changeExtension(output),
+        enumDecls.map((e) => enumToClass(e)).toList().join("\n"));
   }
 }
 
@@ -90,6 +101,7 @@ class FunctionBuilder extends _Builder {
 
   @override
   Future<void> build(BuildStep step) async {
+
   }
 }
 
