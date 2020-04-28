@@ -12,7 +12,7 @@ class Type {
 
   @override
   String toString() {
-    return """${qualType} ${desugaredQualType}""";
+    return """${qualType} ${desugaredQualType ?? ""}""";
   }
 }
 
@@ -28,7 +28,7 @@ class Decl {
 
   @override
   String toString() {
-    return """${id} ${kind} ${type}""";
+    return """${id} ${kind} ${name} ${type}""";
   }
 
   String concatTree(List<String> group, int depth, [Logger logger]) {
@@ -44,6 +44,7 @@ class Decl {
     if (inner != null) {
       switch(kind) {
         case "FunctionDecl" : break;
+        case "FullComment" : break;
         default:
           inner.forEach((n) { n.concatTree(group, depth + 1, logger); });
       }
