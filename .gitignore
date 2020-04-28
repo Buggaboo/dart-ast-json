@@ -19,3 +19,13 @@ doc/api/
 *.js_
 *.js.deps
 *.js.map
+
+# don't commit the original AST unless forced
+*.json
+*.g.dart
+
+# IDE
+.idea
+.eclipse
+ast/
+json/
