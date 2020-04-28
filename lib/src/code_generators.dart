@@ -1,7 +1,7 @@
 import 'serializers.dart';
 
 String opCodeWithInteger(Decl e, int i) {
-  if (e.inner == null) return "";
+  if (e.inner == null) return " = $i";
 
   final list = <Decl>[];
   e.watch("IntegerLiteral", list);
@@ -10,7 +10,7 @@ String opCodeWithInteger(Decl e, int i) {
 
   final literal = list[0];
 
-  return " = ${literal.opcode ?? ""}${literal.value}";
+  return " = ${literal.opcode ?? ""}${literal.value ?? i}";
 }
 
 String enumToClass (Decl e) {
@@ -21,9 +21,6 @@ String enumToClass (Decl e) {
 
   int i = 0;
 
-  return '''
-  class ${e.name} {
-    ${constants.map((c) => 'static const int ${c.name}${opCodeWithInteger(c, i++)};').toList().join("\n")}
-  }
-  ''';
+  return '''class ${e.name} {
+  ${constants.map((c) => 'static const int ${c.name}${opCodeWithInteger(c, i++)};').toList().join("\n  ")}\n}\n''';
 }

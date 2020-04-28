@@ -35,7 +35,7 @@ class ASTResolver implements Builder {
     final root = Decl.fromJson(astJson);
 
     // Debugging
-    root.concatTree(0, log);
+//    root.concatTree(0, log);
 
     final enumList = <Decl>[];
     final structList = <Decl>[];
