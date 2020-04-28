@@ -1,10 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
-
 part of 'serializers.dart';
-
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
 
 Type _$TypeFromJson(Map<String, dynamic> json) {
   return Type(
@@ -19,6 +13,7 @@ Map<String, dynamic> _$TypeToJson(Type instance) => <String, dynamic>{
       'qualType': instance.qualType,
       'typeAliasDeclId': instance.typeAliasDeclId,
     };
+
 
 Decl _$DeclFromJson(Map<String, dynamic> json) {
   return Decl(
@@ -35,7 +30,9 @@ Decl _$DeclFromJson(Map<String, dynamic> json) {
         ? null
         : Type.fromJson(json['type'] as Map<String, dynamic>),
     valueCategory: json['valueCategory'] as String,
-    value: "IntegerLiteral" == (json["kind"] as String) ? json['value'] as String : null,
+
+    // We want strings (the JSON parser turned this into integers / floats etc.)
+    value: json['value'] != null ? json['value'].toString() : null,
   );
 }
 
@@ -46,7 +43,7 @@ Map<String, dynamic> _$DeclToJson(Decl instance) => <String, dynamic>{
       'name': instance.name,
       'opcode': instance.opcode,
       'inner': instance.inner,
-      'type': instance.type,
+      'type': instance.type != null ? _$TypeToJson(instance.type) : null,
       'valueCategory': instance.valueCategory,
       'value': instance.value,
     };

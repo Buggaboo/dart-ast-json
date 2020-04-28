@@ -20,9 +20,9 @@ builders:
     builder_factories: ['resolver']
     build_extensions:
       .json:
-        - .e.txt
-        - .f.txt
-        - .s.txt
+        - .e.json
+        - .f.json
+        - .s.json
     auto_apply: dependents
     build_to: cache
   enumBuilder:
@@ -30,7 +30,7 @@ builders:
     builder_factories: ['enumBuilder']
     build_extensions:
       "$lib$": [ ".e.g.dart" ]
-    required_inputs: ['.e.txt']
+    required_inputs: ['.e.json']
     auto_apply: dependents
     build_to: source
   functionBuilder:
@@ -38,7 +38,7 @@ builders:
     builder_factories: ['functionBuilder']
     build_extensions:
       "$lib$": [ ".f.g.dart" ]
-    required_inputs: ['.f.txt']
+    required_inputs: ['.f.json']
     auto_apply: dependents
     build_to: source
   structBuilder:
@@ -46,6 +46,6 @@ builders:
     builder_factories: ['structBuilder']
     build_extensions:
       "$lib$": [ ".s.g.dart" ]
-    required_inputs: ['.s.txt']
+    required_inputs: ['.s.json']
     auto_apply: dependents
     build_to: source

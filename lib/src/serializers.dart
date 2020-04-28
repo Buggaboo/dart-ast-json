@@ -1,7 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart' show Logger;
 
-
 part 'serializers_generated.dart';
 
 class Type {
@@ -9,6 +8,8 @@ class Type {
   const Type({this.desugaredQualType, this.qualType, this.typeAliasDeclId});
 
   factory Type.fromJson(Map<String, dynamic> json) => _$TypeFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TypeToJson(this);
 
   @override
   String toString() {
@@ -26,12 +27,17 @@ class Decl {
 
   factory Decl.fromJson(Map<String, dynamic> json) => _$DeclFromJson(json);
 
+  Map<String, dynamic> toJson() => _$DeclToJson(this);
+
   @override
   String toString() {
     return """${id} ${kind} ${name} ${type}""";
   }
 
-  String concatTree(List<String> group, int depth, [Logger logger]) {
+  void concatTree(int depth, Logger logger) {
+
+    // ignore comments
+    if ("FullComment" == kind) { return; };
 
     final str = ("  " * depth) + toString();
 
@@ -39,17 +45,33 @@ class Decl {
       logger.info(str);
     }
 
-    group.add(str);
+    if (inner != null) {
+      switch(kind) {
+        case "FunctionDecl" :
+          break; // ignore the implementation details
+        case "FullComment" :
+          break;
+        case "FunctionProtoType":
+          break;
+        default:
+          inner.forEach((n) { n.concatTree(depth + 1, logger); });
+      }
+    }
+  }
+
+  void watch(String kind, List<Decl> list) {
+
+    if (this.kind == kind) {
+      list.add(this);
+    }
 
     if (inner != null) {
       switch(kind) {
-        case "FunctionDecl" : break;
-        case "FullComment" : break;
+        case "FullComment" :
+          break;
         default:
-          inner.forEach((n) { n.concatTree(group, depth + 1, logger); });
+          inner.forEach((n) { n.watch(kind, list); });
       }
     }
-
-    return group.join("\n");
   }
 }

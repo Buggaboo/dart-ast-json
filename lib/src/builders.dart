@@ -1,5 +1,5 @@
 import 'package:build/build.dart';
-import 'dart:convert' show JsonDecoder;
+import 'dart:convert' show JsonDecoder, JsonEncoder;
 import 'package:glob/glob.dart';
 
 import 'package:dart_ast_json/src/serializers.dart';
@@ -13,9 +13,10 @@ String removeTag(Infix i) => i.toString().substring(i.toString().indexOf('.')+1)
 
 class ASTResolver implements Builder {
 
-  static final outputs = Infix.values.map((s) => '''.${removeTag(s)}.txt''').toList();
+  static final outputs = Infix.values.map((s) => '''.${removeTag(s)}.json''').toList();
 
   static final jsonDecoder = JsonDecoder();
+  static final jsonEncoder = JsonEncoder();
 
   @override
   final buildExtensions = {
@@ -26,26 +27,35 @@ class ASTResolver implements Builder {
   Future<void> build(BuildStep step) async {
     final inputId = step.inputId;
 
-    // TODO stream this instead, if there's a perf penalty
-//    final inputStream = File(inputId).openRead();
-//    final await convertStream = JsonDecoder.bind(inputStream);
-
+    // TODO stream this instead, also the conversion
+    // if there's a perf penalty, tested with ~512mb JSON file, seems okay
     final inputString = await step.readAsString(inputId);
     final astJson = jsonDecoder.convert(inputString);
+    final root = Decl.fromJson(astJson);
 
-    final enumAssetId = inputId.changeExtension(outputs[Infix.e.index]);
+    // Debugging
+    root.concatTree(0, log);
 
-    final str = Decl.fromJson(astJson).concatTree(<String>[], 0, log);
+    final enumList = <Decl>[];
+    final structList = <Decl>[];
+    final functionList = <Decl>[];
 
-    await step.writeAsString(enumAssetId, str);
+    root.watch("EnumDecl", enumList);
+    writeJson(step, inputId, enumList, Infix.e.index);
 
-    final functionAssetId = inputId.changeExtension(outputs[Infix.f.index]);
-    await step.writeAsString(functionAssetId, '''test start''');
+    root.watch("FunctionDecl", functionList);
+    writeJson(step, inputId, functionList, Infix.f.index);
 
-    final structAssetId = inputId.changeExtension(outputs[Infix.s.index]);
-    await step.writeAsString(structAssetId, '''test start''');
+    // TODO why doesn't the RecordDecl contain its own name?
+    root.watch("RecordDecl", structList);
+    writeJson(step, inputId, structList, Infix.s.index);
   }
 
+  writeJson(BuildStep step, AssetId assetId, List<Decl> list, int index) async {
+    final json = jsonEncoder.convert(list.map((e) => e.toJson()).toList());
+    final newAssetId = assetId.changeExtension(outputs[index]);
+    await step.writeAsString(newAssetId, json);
+  }
 
 }
 
@@ -57,7 +67,7 @@ abstract class _Builder implements Builder {
 
   get _buildExtensions {
     final untagged = removeTag(this.infix);
-    return {'''.${untagged}.txt''' : [''''.${untagged}.g.dart''']};
+    return {'''.${untagged}.json''' : [''''.${untagged}.g.dart''']};
   }
 
   @override
