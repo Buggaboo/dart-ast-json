@@ -94,6 +94,18 @@ abstract class _Builder implements Builder {
   @override
   Map<String, List<String>> get buildExtensions => _buildExtensions;
 
+  Future<List<Decl>> listDecl(BuildStep step, AssetId inputId) async {
+    final inputString = await step.readAsString(inputId);
+    final listOfMaps = jsonDecoder.convert(inputString);
+
+    final result = <Decl>[];
+
+    // using a forEach instead of map due to List<dynamic> result
+    listOfMaps.forEach((i) { result.add(Decl.fromJson(i)); });
+
+    return result;
+  }
+
 }
 
 class EnumBuilder extends _Builder {
@@ -102,11 +114,9 @@ class EnumBuilder extends _Builder {
 
   @override
   Future<void> build(BuildStep step) async {
-    final inputId = step.inputId;
-    final inputString = await step.readAsString(inputId);
-    final listOfMaps = jsonDecoder.convert(inputString);
 
-    final enumDecls = listOfMaps.map((m) => Decl.fromJson(m)).toList();
+    final inputId = step.inputId;
+    final enumDecls = await listDecl(step, inputId);
 
     await step.writeAsString(inputId.changeExtension(output),
         enumDecls.map((e) => enumToClass(e, log)).toList().join("\n"));
@@ -119,6 +129,12 @@ class FunctionBuilder extends _Builder {
 
   @override
   Future<void> build(BuildStep step) async {
+
+    final inputId = step.inputId;
+    final functionDecls = await listDecl(step, inputId);
+
+//    await step.writeAsString(inputId.changeExtension(output),
+//        functionDecls.map((e) => genFuncs(e, log)).toList().join("\n"));
 
   }
 }
