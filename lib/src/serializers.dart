@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart' show Logger;
 
-part 'serializers_generated.dart';
+part '_serializers.dart';
 
 class Type {
   final String desugaredQualType, qualType, typeAliasDeclId;

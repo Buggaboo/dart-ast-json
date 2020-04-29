@@ -31,8 +31,15 @@ String enumToClass (Decl e, [Logger log]) {
 
   int i = 0;
 
-  final classDef = '''class ${e.name} {
-  ${constants.map((c) => '${c.find("BinaryOperator") == null ? "" : "/* please check */ "}static const int ${c.name}${opCodeWithInteger(c, i++)};').toList().join("\n  ")}\n}\n''';
+  var addWarning = (Decl d) => d.find("BinaryOperator") == null ?
+    "" : "/* please check */ ";
+
+  final fields = constants.map((c) =>
+  '${addWarning(c)}static const int ${c.name}${opCodeWithInteger(c, i++)};')
+      .toList().join("\n  ");
+
+  final classDef = '''/* ${e.id} */\nclass ${e.name} {
+  ${fields}\n}\n''';
 
   return '${disable ? "/*\n" : ""}$classDef${disable ? "*/\n" : ""}';
 }
