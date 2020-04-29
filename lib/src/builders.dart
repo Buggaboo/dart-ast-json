@@ -42,8 +42,8 @@ class ASTResolver implements Builder {
     final structList = <Decl>[];
     final functionList = <Decl>[];
 
-    root.watch("EnumDecl", enumDeclList);
-    root.watch("EnumType", enumTypeList); // contains the actual names
+    root.gather("EnumDecl", enumDeclList);
+    root.gather("EnumType", enumTypeList); // contains the actual names
 
     final typedefEnumNames = Map.fromIterable(
         enumTypeList.where((e) => e.decl != null && e.type != null).toList(),
@@ -51,7 +51,7 @@ class ASTResolver implements Builder {
 
     // assign "-" to enum values
     final enumConstants = <Decl>[];
-    enumDeclList.forEach((e) { e.watch("UnaryOperator", enumConstants); });
+    enumDeclList.forEach((e) { e.gather("UnaryOperator", enumConstants); });
     enumConstants.forEach((e) {
       e.find("IntegerLiteral").opcode = e.opcode;
     });
@@ -62,11 +62,11 @@ class ASTResolver implements Builder {
 
     writeJson(step, inputId, enumDeclList, Infix.e.index);
 
-    root.watch("FunctionDecl", functionList);
+    root.gather("FunctionDecl", functionList);
     writeJson(step, inputId, functionList, Infix.f.index);
 
     // TODO why doesn't the RecordDecl contain its own name? Same thing for the enum
-    root.watch("RecordDecl", structList);
+    root.gather("RecordDecl", structList);
     writeJson(step, inputId, structList, Infix.s.index);
   }
 

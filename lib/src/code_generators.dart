@@ -5,7 +5,7 @@ String opCodeWithInteger(Decl e, int i) {
   if (e.inner == null) return " = $i";
 
   final list = <Decl>[];
-  e.watch("IntegerLiteral", list);
+  e.gather("IntegerLiteral", list);
 
   if (list.isEmpty) return " = $i";
 
@@ -18,7 +18,7 @@ String enumToClass (Decl e, [Logger log]) {
   if (e.inner == null) return "";
 
   final constants = <Decl>[];
-  e.watch("EnumConstantDecl", constants);
+  e.gather("EnumConstantDecl", constants);
 
   var disable = false;
 

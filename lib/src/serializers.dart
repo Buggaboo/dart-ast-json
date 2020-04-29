@@ -63,7 +63,7 @@ class Decl {
     }
   }
 
-  void watch(String kind, List<Decl> list) {
+  void gather(String kind, List<Decl> list) {
 
     if (this.kind == kind) {
       list.add(this);
@@ -74,7 +74,7 @@ class Decl {
         case "FullComment" :
           break;
         default:
-          inner.forEach((n) { n.watch(kind, list); });
+          inner.forEach((n) { n.gather(kind, list); });
       }
     }
   }
