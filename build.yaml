@@ -23,6 +23,7 @@ builders:
         - .ejson
         - .fjson
         - .sjson
+        - .tjson
     auto_apply: dependents
     build_to: cache
   enumBuilder:
@@ -38,7 +39,7 @@ builders:
     builder_factories: ['functionBuilder']
     build_extensions:
       "$lib$": [ ".f.dart" ]
-    required_inputs: ['.fjson']
+    required_inputs: ['.tjson', '.fjson']
     auto_apply: dependents
     build_to: source
   structBuilder:
@@ -46,6 +47,6 @@ builders:
     builder_factories: ['structBuilder']
     build_extensions:
       "$lib$": [ ".s.dart" ]
-    required_inputs: ['.sjson']
+    required_inputs: ['.tjson', '.sjson']
     auto_apply: dependents
     build_to: source

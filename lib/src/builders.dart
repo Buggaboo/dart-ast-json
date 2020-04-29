@@ -39,8 +39,9 @@ class ASTResolver implements Builder {
 
     final enumDeclList = <Decl>[];
     final enumTypeList = <Decl>[];
-    final structList = <Decl>[];
+    final structList   = <Decl>[];
     final functionList = <Decl>[];
+    final typedefList  = <Decl>[];
 
     root.gather("EnumDecl", enumDeclList);
     root.gather("EnumType", enumTypeList); // contains the actual names
@@ -61,6 +62,9 @@ class ASTResolver implements Builder {
         .forEach((e) { e.name = typedefEnumNames[e.id]; });
 
     writeJson(step, inputId, enumDeclList, Infix.e.index);
+
+    root.gather("TypedefDecl", typedefList);
+    writeJson(step, inputId, typedefList, Infix.t.index);
 
     root.gather("FunctionDecl", functionList);
     writeJson(step, inputId, functionList, Infix.f.index);
@@ -133,8 +137,11 @@ class FunctionBuilder extends _Builder {
     final inputId = step.inputId;
     final functionDecls = await listDecl(step, inputId);
 
-//    await step.writeAsString(inputId.changeExtension(output),
-//        functionDecls.map((e) => genFuncs(e, log)).toList().join("\n"));
+    final typeDefsInputId = await step.findAssets(new Glob('**tjson')).first;
+    final typedefDecls = await listDecl(step, typeDefsInputId);
+
+    await step.writeAsString(inputId.changeExtension(output),
+        functionBinding(functionDecls, typedefDecls, log));
 
   }
 }
