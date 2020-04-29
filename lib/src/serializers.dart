@@ -18,12 +18,16 @@ class Type {
 }
 
 class Decl {
-  final String id, kind, tagUsed, name, opcode;
-  final List<Decl> inner;
+  // we want to modify these, in case its empty (e.g. typedef'ed types)
+  // or initialized elsewhere (e.g. opcode)
+  String name, opcode;
+  final String id, kind, tagUsed;
   final Type type;
+  final Decl decl;
+  final List<Decl> inner;
   final String valueCategory, value;
 
-  const Decl({this.id, this.kind, this.tagUsed, this.name, this.opcode, this.inner, this.type, this.valueCategory, this.value});
+  Decl({this.id, this.kind, this.tagUsed, this.name, this.opcode, this.decl, this.inner, this.type, this.valueCategory, this.value});
 
   factory Decl.fromJson(Map<String, dynamic> json) => _$DeclFromJson(json);
 
@@ -73,5 +77,20 @@ class Decl {
           inner.forEach((n) { n.watch(kind, list); });
       }
     }
+  }
+
+  Decl find(String kind) {
+    if (inner != null) {
+      for (Decl e in inner) {
+        if (kind == e.kind) {
+          return e;
+        }
+      }
+
+      for (Decl e in inner) {
+        return e.find(kind);
+      }
+    }
+    return null;
   }
 }

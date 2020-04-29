@@ -22,6 +22,8 @@ Decl _$DeclFromJson(Map<String, dynamic> json) {
     tagUsed: json['tagUsed'] as String,
     name: json['name'] as String,
     opcode: json['opcode'] as String,
+    decl: json['decl'] == null ? null
+        : Decl.fromJson(json['decl'] as Map<String, dynamic>),
     inner: (json['inner'] as List)
         ?.map(
             (e) => e == null ? null : Decl.fromJson(e as Map<String, dynamic>))

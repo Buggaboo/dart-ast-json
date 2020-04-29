@@ -37,17 +37,35 @@ class ASTResolver implements Builder {
     // Debugging
 //    root.concatTree(0, log);
 
-    final enumList = <Decl>[];
+    final enumDeclList = <Decl>[];
+    final enumTypeList = <Decl>[];
     final structList = <Decl>[];
     final functionList = <Decl>[];
 
-    root.watch("EnumDecl", enumList);
-    writeJson(step, inputId, enumList, Infix.e.index);
+    root.watch("EnumDecl", enumDeclList);
+    root.watch("EnumType", enumTypeList); // contains the actual names
+
+    final typedefEnumNames = Map.fromIterable(
+        enumTypeList.where((e) => e.decl != null && e.type != null).toList(),
+        key: (e) => e.decl.id, value: (e) => e.type.qualType);
+
+    // assign "-" to enum values
+    final enumConstants = <Decl>[];
+    enumDeclList.forEach((e) { e.watch("UnaryOperator", enumConstants); });
+    enumConstants.forEach((e) {
+      e.find("IntegerLiteral").opcode = e.opcode;
+    });
+
+    enumDeclList
+        .where((e) => e.name == null).toList()
+        .forEach((e) { e.name = typedefEnumNames[e.id]; });
+
+    writeJson(step, inputId, enumDeclList, Infix.e.index);
 
     root.watch("FunctionDecl", functionList);
     writeJson(step, inputId, functionList, Infix.f.index);
 
-    // TODO why doesn't the RecordDecl contain its own name?
+    // TODO why doesn't the RecordDecl contain its own name? Same thing for the enum
     root.watch("RecordDecl", structList);
     writeJson(step, inputId, structList, Infix.s.index);
   }
@@ -91,7 +109,7 @@ class EnumBuilder extends _Builder {
     final enumDecls = listOfMaps.map((m) => Decl.fromJson(m)).toList();
 
     await step.writeAsString(inputId.changeExtension(output),
-        enumDecls.map((e) => enumToClass(e)).toList().join("\n"));
+        enumDecls.map((e) => enumToClass(e, log)).toList().join("\n"));
   }
 }
 
