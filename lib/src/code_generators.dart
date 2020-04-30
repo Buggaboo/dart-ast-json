@@ -1,6 +1,8 @@
 import 'serializers.dart';
 import 'package:logging/logging.dart' show Logger;
 
+// IDEA: TODO use @annotation to generate what you need
+
 String opCodeWithInteger(Decl e, int i) {
   if (e.inner == null) return " = $i";
 
@@ -25,21 +27,171 @@ String enumToClass (Decl e, [Logger log]) {
   if (e.name == null) {
     disable = true;
     if (log != null) {
-      log.warning('Found enum with missing name');
+      log.warning('Found enum with missing name (${e.id})');
     }
   }
 
   int i = 0;
 
+  // ComplexOperator? CompoundOperator???
   var addWarning = (Decl d) => d.find("BinaryOperator") == null ?
-    "" : "/* please check */ ";
+    "" : " /* TODO check actual value ${d.id} */";
 
   final fields = constants.map((c) =>
-  '${addWarning(c)}static const int ${c.name}${opCodeWithInteger(c, i++)};')
-      .toList().join("\n  ");
+    'static const int ${c.name}${opCodeWithInteger(c, i++)};${addWarning(c)}')
+    .toList().join("\n  ");
 
-  final classDef = '''/* ${e.id} */\nclass ${e.name} {
-  ${fields}\n}\n''';
+  final classDef =
+  '''
+  /* ${e.id} */
+  class ${e.name} {
+    ${fields}
+  }
+  
+  ''';
 
-  return '${disable ? "/*\n" : ""}$classDef${disable ? "*/\n" : ""}';
+  return disable ?
+    '''
+    /*
+    $classDef
+    */
+    ''' : classDef;
 }
+
+// TODO remove
+/** Example
+  typedef obx_query_visit_native_t = Int32 Function(Pointer<Void> query,
+    Pointer<NativeFunction<obx_data_visitor_native_t>> visitor, Pointer<Void> user_data, Uint64 offset, Uint64 limit);
+
+  typedef obx_query_visit_dart_t = int Function(Pointer<Void> query,
+    Pointer<NativeFunction<obx_data_visitor_native_t>> visitor, Pointer<Void> user_data, int offset, int limit);
+ */
+
+String pointerize(String p) => 'Pointer<$p>';
+
+String ffiType(Decl d, Logger log) {
+  var p = d.type;
+  String result;
+
+  if (p.resemblesNative) {
+    final bits = p.bits;
+    switch(bits) {
+      case 0 : { result = 'Void'; } break;
+      case 8 : { result = 'nt8'; } break;
+      case 16 : { result = 'nt16'; } break;
+      case 32 : { result = 'nt32'; } break;
+      case 64 : { result = 'nt64'; } break;
+      case magic_no_float  : { result = 'Float'; } break;
+      case magic_no_double : { result = 'Double'; } break;
+      default: log.warning("This should (almost) never happen, ${d.id} "
+          "is detected as a native scalar,"
+          "but does not conform to the usual signature");
+    }
+    if (bits >= 8 && bits <= 64) {
+      result = '${p.isUnsigned ? 'Ui' : 'I'}$result';
+    }
+  }else if (p.isStruct) {
+    result = 'Pointer<Void>'; // TODO for now treat as VoidPtr
+  }else if (p.isFuncPtr) {
+    // TODO nth deep typedefs are an issue, assume the best case
+    result = 'Pointer<NativeFunction<TODO>>';
+  }else if (p.isEnum) {
+    result = 'Int32'; // TODO implement as a simple integer, determine size?
+  }else if (p.isUnion) {
+      // TODO implemement as if the enum word size is equal to the largest value
+    result = 'Int32';
+  }else { // probably a typedef, TODO determine this desugared type
+    result = 'typedef ${p.basicType}';
+  }
+
+  for (var _i=0; _i<p.hasPointers; _i++) {
+    pointerize(result);
+  }
+
+  return result;
+}
+
+
+final _dartTypeInt = 'int';
+final _dartTypeFloat = 'double';
+final _ffiBasicType2DartTable = {
+  'Void': 'void',
+  'Int8': _dartTypeInt,
+  'Int16': _dartTypeInt,
+  'Int32': _dartTypeInt,
+  'Int64': _dartTypeInt,
+  'Uint8': _dartTypeInt,
+  'Uint16': _dartTypeInt,
+  'Uint32': _dartTypeInt,
+  'Uint64': _dartTypeInt,
+  'Float': _dartTypeFloat,
+  'Double': _dartTypeFloat
+};
+
+String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
+  final parmDecls = <Decl>[];
+  fun.gather("ParmVarDecl", parmDecls);
+
+  final rawParams = parmDecls.map((p) => p.type.basicType).toList();
+
+  final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
+
+  final ffiParams = <String>[];
+  final dartParams = <String>[];
+  var isTranslatable2Dart = false;
+  for (var p in parmDecls) {
+    var translatedFfiType = ffiType(p, log);
+    ffiParams.add('${translatedFfiType} ${p.name}');
+    var dartType = _ffiBasicType2DartTable[translatedFfiType];
+
+    var hasTranslation = dartType != null;
+    isTranslatable2Dart = isTranslatable2Dart || hasTranslation;
+    dartParams.add((hasTranslation ? dartType : translatedFfiType) + ' ${p.name}');
+  }
+
+  // TODO put the return type with the rest of the ParmDecls
+  var ffiReturnType = ffiType(Decl(id: fun.id, type: Type(qualType: rawFunReturnType)), log);
+  isTranslatable2Dart = isTranslatable2Dart || _ffiBasicType2DartTable[ffiReturnType] != null;
+
+  var dartTypedef = !isTranslatable2Dart ? "" :
+    genTypedef("dart", fun.name, ffiReturnType, dartParams);
+
+  return
+    '''
+    /*
+    // ${fun.id} (${parmDecls.map((p) => p.id).toList().join(', ')})
+    // return: ${fun.type}
+    // params: ${rawParams.join(', ')}
+    ${genTypedef("ffi", fun.name, ffiReturnType, ffiParams)}
+    ${dartTypedef}
+    */
+    ''';
+}
+
+String genTypedef(String suffix, String funName, String returnType, List<String> params) =>
+'typedef ${funName}_${suffix} = ${returnType} Function(${params.join(', ')});';
+
+// TODO initialize typedef dictionary in the builder
+String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
+'''
+${funs.map((f) => funPrep(f, {}, log)).toList().join('\n\n')}
+''';
+
+String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
+'''
+import "dart:ffi";
+import "dart:io";
+import "dart:typed_data"
+import 'package:ffi/ffi.dart';
+
+class Binding {
+  final DynamicLibrary lib;
+
+  Binding._(this.lib);
+  
+  factory fromLibrary(DynamicLibrary lib) =>
+    Binding._(lib);
+    
+  ${signatures(funs, typedefs, log)}
+}
+''';

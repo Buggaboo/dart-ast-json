@@ -2,21 +2,23 @@ import 'package:build/build.dart';
 import 'dart:convert' show JsonDecoder, JsonEncoder;
 import 'package:glob/glob.dart';
 
-import 'package:dart_ast_json/src/serializers.dart';
 import 'package:dart_ast_json/src/code_generators.dart';
+import 'package:dart_ast_json/src/serializers.dart';
+import 'package:dart_ast_json/src/toolbox.dart';
 
 final jsonDecoder = JsonDecoder();
 final jsonEncoder = JsonEncoder();
 
 enum Infix {
-  e, f, s
+  e, f, s, t
 }
 
-String _removeTag(Infix i) => i.toString().substring(i.toString().indexOf('.')+1);
+String removeTag(Infix i) =>
+    i.toString().substring(i.toString().indexOf('.') + 1);
 
 class ASTResolver implements Builder {
 
-  static final outputs = Infix.values.map((s) => '''.${_removeTag(s)}json''').toList();
+  static final outputs = Infix.values.map((s) => '.${removeTag(s)}json').toList();
 
 
   @override
@@ -67,9 +69,11 @@ class ASTResolver implements Builder {
     writeJson(step, inputId, typedefList, Infix.t.index);
 
     root.gather("FunctionDecl", functionList);
-    writeJson(step, inputId, functionList, Infix.f.index);
+    // filter out underscored functions
+    writeJson(step, inputId,
+        functionList.where((f) => !f.name.startsWith("_")).toList(), Infix.f.index);
 
-    // TODO why doesn't the RecordDecl contain its own name? Same thing for the enum
+    // TODO match by Decl.id on the typedefs, i.e. both for enums and structs
     root.gather("RecordDecl", structList);
     writeJson(step, inputId, structList, Infix.s.index);
   }
@@ -86,13 +90,13 @@ abstract class _Builder implements Builder {
 
   final Infix infix;
 
-  String get output => '.${_removeTag(this.infix)}.dart';
+  String get output => '.${removeTag(this.infix)}.dart';
 
   const _Builder(this.infix);
 
   get _buildExtensions {
-    final untagged = _removeTag(this.infix);
-    return {'''.${untagged}json''' : [output]};
+    final untagged = removeTag(this.infix);
+    return {'.${untagged}json' : [output]};
   }
 
   @override
