@@ -65,32 +65,23 @@ String enumToClass (Decl e, [Logger log]) {
 
   typedef obx_query_visit_dart_t = int Function(Pointer<Void> query,
     Pointer<NativeFunction<obx_data_visitor_native_t>> visitor, Pointer<Void> user_data, int offset, int limit);
- */
+*/
+
+// TODO cleanup reference data instead, desugar aggressively
+String desugar(Type origType, Map<String, Decl> typedefs) {
+  final scrubbed = origType.scrubbed;
+  final typedef = typedefs[scrubbed];
+  if (typedef == null) { return origType.qualType; }
+  return origType.basicType.replaceAll(scrubbed, typedef.type.qualType);
+}
 
 String pointerize(String p) => 'Pointer<$p>';
 
-String ffiType(Decl d, Logger log) {
-  var p = d.type;
-  String result;
+String ffiType(Decl d, Map<String, Decl> typedefs, Logger log) {
+  final t = Type(qualType: desugar(d.type, typedefs));
 
-  if (p.resemblesNative) {
-    final bits = p.bits;
-    switch(bits) {
-      case 0 : { result = 'Void'; } break;
-      case 8 : { result = 'nt8'; } break;
-      case 16 : { result = 'nt16'; } break;
-      case 32 : { result = 'nt32'; } break;
-      case 64 : { result = 'nt64'; } break;
-      case magic_no_float  : { result = 'Float'; } break;
-      case magic_no_double : { result = 'Double'; } break;
-      default: log.warning("This should (almost) never happen, ${d.id} "
-          "is detected as a native scalar,"
-          "but does not conform to the usual signature");
-    }
-    if (bits >= 8 && bits <= 64) {
-      result = '${p.isUnsigned ? 'Ui' : 'I'}$result';
-    }
-  }else if (p.isStruct) {
+  /*
+  if (p.isStruct) {
     result = 'Pointer<Void>'; // TODO for now treat as VoidPtr
   }else if (p.isFuncPtr) {
     // TODO nth deep typedefs are an issue, assume the best case
@@ -102,15 +93,43 @@ String ffiType(Decl d, Logger log) {
     result = 'Int32';
   }else { // probably a typedef, TODO determine this desugared type
     result = 'typedef ${p.basicType}';
+  }else
+  */
+
+  String result = t.qualType;
+  String replaceWith = '';
+  if (t.resemblesNative) {
+    final bits = t.bits;
+    switch(bits) {
+      case 0 : { replaceWith = 'Void'; } break;
+      case 8 : { replaceWith = 'nt8'; } break;
+      case 16 : { replaceWith = 'nt16'; } break;
+      case 32 : { replaceWith = 'nt32'; } break;
+      case 64 : { replaceWith = 'nt64'; } break;
+      case magic_no_float  : { replaceWith = 'Float'; } break;
+      case magic_no_double : { replaceWith = 'Double'; } break;
+      default: log.warning("This should (almost) never happen, ${d.id} "
+          "is detected as a native scalar,"
+          "but does not conform to the usual signature");
+    }
+    if (bits >= 8 && bits <= 64) {
+      replaceWith = '${t.isUnsigned ? 'Ui' : 'I'}$replaceWith';
+    }
+
+    result = replaceWith;
   }
 
-  for (var _i=0; _i<p.hasPointers; _i++) {
-    pointerize(result);
+  // replace pointers
+  if (result.endsWith('*')) {
+    result = result.substring(0, result.length - t.hasPointers).trim();
+  }
+
+  for (var _i=0; _i<t.hasPointers; _i++) {
+    result = pointerize(result);
   }
 
   return result;
 }
-
 
 final _dartTypeInt = 'int';
 final _dartTypeFloat = 'double';
@@ -130,18 +149,19 @@ final _ffiBasicType2DartTable = {
 
 String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   final parmDecls = <Decl>[];
-  fun.gather("ParmVarDecl", parmDecls);
-
-  final rawParams = parmDecls.map((p) => p.type.basicType).toList();
 
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
+  parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
+  fun.gather("ParmVarDecl", parmDecls);
+
+  final rawParams = parmDecls.map((p) => desugar(p.type, typedefs)).toList();
 
   final ffiParams = <String>[];
   final dartParams = <String>[];
   var isTranslatable2Dart = false;
   for (var p in parmDecls) {
-    var translatedFfiType = ffiType(p, log);
-    ffiParams.add('${translatedFfiType} ${p.name}');
+    var translatedFfiType = ffiType(p, typedefs, log);
+    ffiParams.add('$translatedFfiType ${p.name}');
     var dartType = _ffiBasicType2DartTable[translatedFfiType];
 
     var hasTranslation = dartType != null;
@@ -149,32 +169,29 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
     dartParams.add((hasTranslation ? dartType : translatedFfiType) + ' ${p.name}');
   }
 
-  // TODO put the return type with the rest of the ParmDecls
-  var ffiReturnType = ffiType(Decl(id: fun.id, type: Type(qualType: rawFunReturnType)), log);
-  isTranslatable2Dart = isTranslatable2Dart || _ffiBasicType2DartTable[ffiReturnType] != null;
-
   var dartTypedef = !isTranslatable2Dart ? "" :
-    genTypedef("dart", fun.name, ffiReturnType, dartParams);
+    genTypedef("dart", fun.name, dartParams);
 
   return
     '''
     /*
-    // ${fun.id} (${parmDecls.map((p) => p.id).toList().join(', ')})
-    // return: ${fun.type}
-    // params: ${rawParams.join(', ')}
-    ${genTypedef("ffi", fun.name, ffiReturnType, ffiParams)}
+    // ${fun.id} (${parmDecls.sublist(1).map((p) => p.id).toList().join(', ')})
+    // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
+    ${genTypedef("ffi", fun.name, ffiParams)}
     ${dartTypedef}
     */
     ''';
 }
 
-String genTypedef(String suffix, String funName, String returnType, List<String> params) =>
-'typedef ${funName}_${suffix} = ${returnType} Function(${params.join(', ')});';
+String genTypedef(String suffix, String funName, List<String> params) =>
+'typedef ${funName}_${suffix} = ${params[0].trim()} Function(${params.sublist(1).join(', ')});';
 
 // TODO initialize typedef dictionary in the builder
 String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
-${funs.map((f) => funPrep(f, {}, log)).toList().join('\n\n')}
+${funs.map((f) => funPrep(f,
+    Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log))
+    .toList().join('\n\n')}
 ''';
 
 String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
@@ -191,6 +208,10 @@ class Binding {
   
   factory fromLibrary(DynamicLibrary lib) =>
     Binding._(lib);
+
+  /*
+  ${typedefs.map((s) => '${s.name}: ' + s.type.toString()).toList().join("\n  ")}
+  */
     
   ${signatures(funs, typedefs, log)}
 }

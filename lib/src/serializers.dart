@@ -23,8 +23,9 @@ const magic_no_double = 1338;
 final NativeScalar = {
   'void' : 0, 'char': 8, 'short': 16, 'int': 32, 'long': 64,
   'float' : magic_no_float, 'double': magic_no_double,
-  'int8': 8, 'int16': 16, 'int32': 32, 'int64': 64,
-  'uint8': 8, 'uint16': 16, 'uint32': 32, 'uint64': 64,
+  'int8_t': 8, 'int16_t': 16, 'int32_t': 32, 'int64_t': 64,
+  'uint8_t': 8, 'uint16_t': 16, 'uint32_t': 32, 'uint64_t': 64,
+  'long long' : 64, // at least 64-bit...
   'size_t': 32 // TODO correct this
 };
 
@@ -38,47 +39,44 @@ class Type {
 
   @override
   String toString() {
-    return '${qualType} ; ${desugaredQualType ?? ""}';
+    return '$qualType ; ${desugaredQualType ?? ""}';
   }
 
   // remove useless symbols to us
   String get basicType =>
     (desugaredQualType ?? qualType)
-        .replaceAll('volatile ', '').trim()
-        .replaceAll('const ', '').trim();
+        .replaceAll('volatile ', '')
+        .replaceAll('const ', '')
+        .trim();
 
   // remove:
   // - signed / unsigned
   // - asterisks
   String get scrubbed => basicType
-      .replaceAll('*', '').trim()
+      .replaceAll('*', '')
       .replaceAll('unsigned ', '')
-      .replaceAll('signed ', '');
+      .replaceAll('signed ', '')
+      .trim();
 
   bool get resemblesNative => NativeScalar[scrubbed] != null;
 
   // float: 1337, double: 1338
   int get bits => NativeScalar[scrubbed];
 
-
   bool get isEnum =>
-    basicType.startsWith("enum");
+    qualType.startsWith("enum ");
 
   bool get isUnion =>
-    basicType.startsWith("union");
+    qualType.contains("union ");
 
   bool get isStruct =>
-    basicType.startsWith("struct");
+    qualType.contains("struct ");
 
   bool get isFuncPtr =>
-    basicType.contains("(*)") || basicType.contains("(*const)");
+    qualType.replaceAll('const', '').contains("(*)(");
 
   bool get isUnsigned {
-    if (!basicType.startsWith("signed ")) {
-      return false;
-    }
-
-    if (basicType.startsWith("unsigned ")) {
+    if (basicType.contains("unsigned ")) {
       return true;
     }
 
@@ -90,7 +88,7 @@ class Type {
   }
 
   int get hasPointers =>
-    countPointersBackwards(basicType);
+    countPointersBackwards(desugaredQualType ?? qualType);
 }
 
 class Decl {
