@@ -14,7 +14,6 @@ Map<String, dynamic> _$TypeToJson(Type instance) => <String, dynamic>{
       'typeAliasDeclId': instance.typeAliasDeclId,
     };
 
-
 Decl _$DeclFromJson(Map<String, dynamic> json) {
   return Decl(
     id: json['id'] as String,

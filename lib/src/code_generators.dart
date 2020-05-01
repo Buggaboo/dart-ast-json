@@ -67,11 +67,16 @@ String enumToClass (Decl e, [Logger log]) {
     Pointer<NativeFunction<obx_data_visitor_native_t>> visitor, Pointer<Void> user_data, int offset, int limit);
 */
 
-// TODO cleanup reference data instead, desugar aggressively
 String desugar(Type origType, Map<String, Decl> typedefs) {
   final scrubbed = origType.scrubbed;
   final typedef = typedefs[scrubbed];
   if (typedef == null) { return origType.qualType; }
+
+  // function pointer
+  if (typedef.type.qualType.contains('(')) {
+    return origType.basicType.replaceAll(scrubbed, 'fn_ptr $scrubbed');
+  }
+
   return origType.basicType.replaceAll(scrubbed, typedef.type.qualType);
 }
 
@@ -79,22 +84,6 @@ String pointerize(String p) => 'Pointer<$p>';
 
 String ffiType(Decl d, Map<String, Decl> typedefs, Logger log) {
   final t = Type(qualType: desugar(d.type, typedefs));
-
-  /*
-  if (p.isStruct) {
-    result = 'Pointer<Void>'; // TODO for now treat as VoidPtr
-  }else if (p.isFuncPtr) {
-    // TODO nth deep typedefs are an issue, assume the best case
-    result = 'Pointer<NativeFunction<TODO>>';
-  }else if (p.isEnum) {
-    result = 'Int32'; // TODO implement as a simple integer, determine size?
-  }else if (p.isUnion) {
-      // TODO implemement as if the enum word size is equal to the largest value
-    result = 'Int32';
-  }else { // probably a typedef, TODO determine this desugared type
-    result = 'typedef ${p.basicType}';
-  }else
-  */
 
   String result = t.qualType;
   String replaceWith = '';
@@ -151,6 +140,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   final parmDecls = <Decl>[];
 
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
+  // Don't remove the name parama, because 'null' will pop up
   parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
   fun.gather("ParmVarDecl", parmDecls);
 
@@ -186,7 +176,6 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
 String genTypedef(String suffix, String funName, List<String> params) =>
 'typedef ${funName}_${suffix} = ${params[0].trim()} Function(${params.sublist(1).join(', ')});';
 
-// TODO initialize typedef dictionary in the builder
 String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 ${funs.map((f) => funPrep(f,

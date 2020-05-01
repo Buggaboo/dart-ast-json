@@ -4,7 +4,6 @@ import 'package:glob/glob.dart';
 
 import 'package:dart_ast_json/src/code_generators.dart';
 import 'package:dart_ast_json/src/serializers.dart';
-import 'package:dart_ast_json/src/toolbox.dart';
 
 final jsonDecoder = JsonDecoder();
 final jsonEncoder = JsonEncoder();
@@ -20,11 +19,36 @@ class ASTResolver implements Builder {
 
   static final outputs = Infix.values.map((s) => '.${removeTag(s)}json').toList();
 
-
   @override
   final buildExtensions = {
     '''.json''': outputs
   };
+
+  // sanitize double accounting of types etc.
+  static Type simplifyType(Type old) {
+    if ((old.isEnum || old.isStruct) || old.isUnion) {
+      return Type(qualType: old.qualType);
+    }
+
+    // the 'const' removal, cleans up for code generation
+    if (old.qualType.replaceAll('const', '').contains('(*)')) {
+      return Type(qualType: old.qualType);
+    }
+
+    if (old.desugaredQualType != null) {
+      return Type(qualType: old.desugaredQualType);
+    }
+
+    return Type(qualType: old.qualType);
+  }
+
+  static Decl simplifyDeclType(Decl decl) {
+    return Decl(
+      id: decl.id,
+      name: decl.name,
+      type: simplifyType(decl.type)
+    );
+  }
 
   @override
   Future<void> build(BuildStep step) async {
@@ -66,7 +90,7 @@ class ASTResolver implements Builder {
     writeJson(step, inputId, enumDeclList, Infix.e.index);
 
     root.gather("TypedefDecl", typedefList);
-    writeJson(step, inputId, typedefList, Infix.t.index);
+    writeJson(step, inputId, typedefList.map((t) => simplifyDeclType(t)).toList(), Infix.t.index);
 
     root.gather("FunctionDecl", functionList);
     // filter out underscored functions
@@ -144,8 +168,17 @@ class FunctionBuilder extends _Builder {
     final typeDefsInputId = await step.findAssets(new Glob('**tjson')).first;
     final typedefDecls = await listDecl(step, typeDefsInputId);
 
+    // add function pointer references from c typedefs
+    // for dart's typedef code generation
+    final unresolvedTypedefs = typedefDecls.where(
+        (t) =>
+            (!t.name.startsWith('__') && // skip internal typedefs
+            !t.type.qualType.startsWith('__')) && // skip internal types
+            t.type.qualType.contains('(')) // most likely a typedef for a function (ptr) type
+            .map((d) => Decl.fromTypedefDecl(d)).toList();
+
     await step.writeAsString(inputId.changeExtension(output),
-        functionBinding(functionDecls, typedefDecls, log));
+        functionBinding(unresolvedTypedefs + functionDecls, typedefDecls, log));
 
   }
 }

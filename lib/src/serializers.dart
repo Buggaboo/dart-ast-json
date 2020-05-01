@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart' show Logger;
-import 'toolbox.dart';
+import 'dart:math' show Random;
 
 part '_serializers.dart';
 
@@ -23,8 +23,6 @@ const magic_no_double = 1338;
 final NativeScalar = {
   'void' : 0, 'char': 8, 'short': 16, 'int': 32, 'long': 64,
   'float' : magic_no_float, 'double': magic_no_double,
-  'int8_t': 8, 'int16_t': 16, 'int32_t': 32, 'int64_t': 64,
-  'uint8_t': 8, 'uint16_t': 16, 'uint32_t': 32, 'uint64_t': 64,
   'long long' : 64, // at least 64-bit...
   'size_t': 32 // TODO correct this
 };
@@ -44,10 +42,10 @@ class Type {
 
   // remove useless symbols to us
   String get basicType =>
-    (desugaredQualType ?? qualType)
-        .replaceAll('volatile ', '')
-        .replaceAll('const ', '')
-        .trim();
+    qualType
+      .replaceAll('volatile ', '')
+      .replaceAll('const ', '')
+      .trim();
 
   // remove:
   // - signed / unsigned
@@ -80,10 +78,6 @@ class Type {
       return true;
     }
 
-    if (basicType.contains("uint")) {
-      return true;
-    }
-
     return false;
   }
 
@@ -100,10 +94,35 @@ class Decl {
   final Decl decl;
   final List<Decl> inner;
   final String valueCategory, value;
+  final bool useAsTypedef; // don't actually generate a function for this
 
-  Decl({this.id, this.kind, this.tagUsed, this.name, this.opcode, this.decl, this.inner, this.type, this.valueCategory, this.value});
+  Decl({this.id, this.kind, this.tagUsed, this.name, this.opcode, this.decl, this.inner, this.type, this.valueCategory, this.value, this.useAsTypedef});
 
   factory Decl.fromJson(Map<String, dynamic> json) => _$DeclFromJson(json);
+
+  static final random = Random(1337);
+  static int randomLetter(int code) {
+    return code + random.nextInt(5);
+  }
+
+  factory Decl.fromTypedefDecl(Decl decl) {
+    assert(decl.kind == 'TypedefDecl');
+    final qualType = decl.type.qualType.replaceAll('(*)', '');
+    final parmVarDecls = qualType
+        .substring(qualType.indexOf('(')+1, qualType.indexOf(')'))
+        .split(', ').map((p) => Decl(
+          name:
+            String.fromCharCode(randomLetter(p[0].codeUnitAt(0)))
+          , kind: 'ParmVarDecl'
+          , type: Type(qualType: p))).toList();
+    return Decl(
+        useAsTypedef: true,
+        kind: 'FunctionDecl',
+        name: decl.name,
+        type: Type(qualType: qualType),
+        inner: parmVarDecls
+    );
+  }
 
   Map<String, dynamic> toJson() => _$DeclToJson(this);
 
