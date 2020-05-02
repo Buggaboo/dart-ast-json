@@ -106,9 +106,11 @@ class Decl {
 
   factory Decl.fromTypedefDecl(Decl decl) {
     assert(decl.kind == 'TypedefDecl');
-    final qualType = decl.type.qualType.replaceAll('(*)', '');
+
+    // We can get into trouble by replacing all, due to nested fun ptrs
+    final qualType = decl.type.qualType.replaceFirst('(*)', '');
     final parmVarDecls = qualType
-        .substring(qualType.indexOf('(')+1, qualType.indexOf(')'))
+        .substring(qualType.indexOf('(') + 1, qualType.length - 1)
         .split(', ').map((p) => Decl(
           name:
             String.fromCharCode(randomLetter(p[0].codeUnitAt(0)))

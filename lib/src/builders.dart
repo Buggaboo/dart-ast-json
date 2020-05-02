@@ -26,6 +26,10 @@ class ASTResolver implements Builder {
 
   // sanitize double accounting of types etc.
   static Type simplifyType(Type old) {
+    if ((old.isEnum || old.isStruct) || old.isUnion) {
+      return Type(qualType: old.qualType);
+    }
+
     // this is usually accompanied by 'typeAliasDeclId'
     if (old.desugaredQualType != null /* && typeAliasDeclId?.isNotEmpty */) {
       return Type(qualType: old.desugaredQualType);
