@@ -73,11 +73,11 @@ String desugar(Type origType, Map<String, Decl> typedefs) {
   if (typedef == null) { return origType.qualType; }
 
   // function pointer
-  if (typedef.type.qualType.contains('(')) {
-    return origType.basicType.replaceAll(scrubbed, 'fn_ptr $scrubbed');
+  if (typedef.type.qualType.contains('(*)')) {
+    return origType.qualType.replaceAll(scrubbed, 'fn_ptr $scrubbed');
   }
 
-  return origType.basicType.replaceAll(scrubbed, typedef.type.qualType);
+  return origType.qualType.replaceAll(scrubbed, typedef.type.qualType);
 }
 
 String pointerize(String p) => 'Pointer<$p>';

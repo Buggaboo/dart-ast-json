@@ -24,7 +24,7 @@ final NativeScalar = {
   'void' : 0, 'char': 8, 'short': 16, 'int': 32, 'long': 64,
   'float' : magic_no_float, 'double': magic_no_double,
   'long long' : 64, // at least 64-bit...
-  'size_t': 32 // TODO correct this
+  'size_t': 32
 };
 
 class Type {
@@ -40,17 +40,10 @@ class Type {
     return '$qualType ; ${desugaredQualType ?? ""}';
   }
 
-  // remove useless symbols to us
-  String get basicType =>
-    qualType
-      .replaceAll('volatile ', '')
-      .replaceAll('const ', '')
-      .trim();
-
   // remove:
   // - signed / unsigned
   // - asterisks
-  String get scrubbed => basicType
+  String get scrubbed => qualType
       .replaceAll('*', '')
       .replaceAll('unsigned ', '')
       .replaceAll('signed ', '')
@@ -71,12 +64,18 @@ class Type {
     qualType.contains("struct ");
 
   bool get isFuncPtr =>
-    qualType.replaceAll('const', '').contains("(*)(");
+    qualType.contains("(*)");
 
   bool get isUnsigned {
-    if (basicType.contains("unsigned ")) {
+    if (qualType.contains("unsigned ")) {
       return true;
     }
+
+    /// Clang: char is signed on x86
+    /// unsigned on an arm target.
+//    if (qualType.contains("signed char")) {
+//      return false;
+//    }
 
     return false;
   }

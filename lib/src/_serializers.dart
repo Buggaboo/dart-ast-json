@@ -1,9 +1,16 @@
 part of 'serializers.dart';
 
+// Remove useless symbols for Dart's ffi code generation
+String scrub(String s) => s
+  ?.replaceAll("const ", '')
+  ?.replaceAll("const)", ")") // remove "(*const) in fn ptrs
+  ?.replaceAll("volatile ", '')
+  ?.trim();
+
 Type _$TypeFromJson(Map<String, dynamic> json) {
   return Type(
-    desugaredQualType: json['desugaredQualType'] as String,
-    qualType: json['qualType'] as String,
+    desugaredQualType: scrub(json['desugaredQualType'] as String),
+    qualType: scrub(json['qualType'] as String),
     typeAliasDeclId: json['typeAliasDeclId'] as String,
   );
 }

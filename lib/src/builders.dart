@@ -26,16 +26,8 @@ class ASTResolver implements Builder {
 
   // sanitize double accounting of types etc.
   static Type simplifyType(Type old) {
-    if ((old.isEnum || old.isStruct) || old.isUnion) {
-      return Type(qualType: old.qualType);
-    }
-
-    // the 'const' removal, cleans up for code generation
-    if (old.qualType.replaceAll('const', '').contains('(*)')) {
-      return Type(qualType: old.qualType);
-    }
-
-    if (old.desugaredQualType != null) {
+    // this is usually accompanied by 'typeAliasDeclId'
+    if (old.desugaredQualType != null /* && typeAliasDeclId?.isNotEmpty */) {
       return Type(qualType: old.desugaredQualType);
     }
 
@@ -92,6 +84,7 @@ class ASTResolver implements Builder {
     root.gather("TypedefDecl", typedefList);
     writeJson(step, inputId, typedefList.map((t) => simplifyDeclType(t)).toList(), Infix.t.index);
 
+    // TODO ignore FunctionDecl within FunctionDecl
     root.gather("FunctionDecl", functionList);
     // filter out underscored functions
     writeJson(step, inputId,
