@@ -157,17 +157,24 @@ class Decl {
     }
   }
 
-  void gather(String kind, List<Decl> list) {
+  void gather(String kind, List<Decl> list, {List<String> cutOff}) {
     if (this.kind == kind) {
       list.add(this);
     }
 
     if (inner != null) {
-      switch(kind) {
+      switch (kind) {
         case "FullComment" :
           break;
         default:
-          inner.forEach((n) { n.gather(kind, list); });
+          for (var n in inner)
+          {
+            if (cutOff != null && cutOff.contains(n.kind)) {
+              continue;
+            }
+
+            n.gather(kind, list);
+          }
       }
     }
   }

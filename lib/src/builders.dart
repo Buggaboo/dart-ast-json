@@ -85,17 +85,17 @@ class ASTResolver implements Builder {
 
     writeJson(step, inputId, enumDeclList, Infix.e.index);
 
-    root.gather("TypedefDecl", typedefList);
+    root.gather("TypedefDecl", typedefList, cutOff: ['FunctionDecl']);
     writeJson(step, inputId, typedefList.map((t) => simplifyDeclType(t)).toList(), Infix.t.index);
 
-    // TODO ignore FunctionDecl within FunctionDecl
-    root.gather("FunctionDecl", functionList);
+    // TODO ignore FunctionDecl within FunctionDecl (premature opt?)
+    root.gather("FunctionDecl", functionList, cutOff: ['CompoundStmt']);
     // filter out underscored functions
     writeJson(step, inputId,
         functionList.where((f) => !f.name.startsWith("_")).toList(), Infix.f.index);
 
     // TODO match by Decl.id on the typedefs, i.e. both for enums and structs
-    root.gather("RecordDecl", structList);
+    root.gather("RecordDecl", structList, cutOff: ['FunctionDecl']);
     writeJson(step, inputId, structList, Infix.s.index);
   }
 
