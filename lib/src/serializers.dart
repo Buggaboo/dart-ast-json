@@ -169,6 +169,7 @@ class Decl {
       return;
     }else if (this.kind == kind) {
       list.add(this); // 1st case
+      return; // once you've found it, do not go further
     }
 
     if (inner != null) {
