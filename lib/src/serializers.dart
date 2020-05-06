@@ -16,6 +16,34 @@ int countPointersBackwards(String s) {
   }
 }
 
+int normalizeSymbol(int i) {
+  if (i < 48) {
+    return 48; // corrective
+  }
+
+  if (i < 58) {
+    return i;
+  }
+
+  if (i < 65) {
+    return 65;
+  }
+
+  if (i < 91) {
+    return i;
+  }
+
+  if (i < 97) {
+    return 97;
+  }
+
+  if (i < 123) {
+    return i;
+  }
+
+  return i % 48;
+}
+
 // TODO also offer a UTF8 version of types that contain char
 const magic_no_float = 1337;
 const magic_no_double = 1338;
@@ -116,7 +144,7 @@ class Decl {
     List<Decl> parmVarDecls = 'void' != paramGroup ? paramGroup
         .split(', ').map((p) => Decl(
           name:
-            String.fromCharCode(randomLetter(p[0].codeUnitAt(0)))
+            String.fromCharCode(normalizeSymbol(randomLetter(p[0].codeUnitAt(0))))
           , kind: 'ParmVarDecl'
           , type: Type(qualType: p))).toList() : [];
     return Decl(

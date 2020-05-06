@@ -1,34 +1,6 @@
 import 'serializers.dart';
 
-int _normalizeSymbol(int i) {
-  if (i < 48) {
-    return 48; // corrective
-  }
-
-  if (i < 58) {
-    return i;
-  }
-
-  if (i < 65) {
-    return 65;
-  }
-
-  if (i < 91) {
-    return i;
-  }
-
-  if (i < 97) {
-    return 97;
-  }
-
-  if (i < 123) {
-    return i;
-  }
-
-  return i % 48;
-}
-
-String incrementSymbol(String str) => String.fromCharCodes(str.codeUnits.map((s) => _normalizeSymbol(s + 1)));
+String incrementSymbol(String str) => String.fromCharCodes(str.codeUnits.map((s) => normalizeSymbol(s + 1)));
 
 final leftP  = '('.codeUnitAt(0);
 final rightP = ')'.codeUnitAt(0);

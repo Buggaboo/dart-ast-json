@@ -140,7 +140,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   final parmDecls = <Decl>[];
 
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
-  // Don't remove the empty name param, because 'null' will pop up
+  /// Don't remove the empty name param, because 'null' will pop up
   parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
   fun.gather("ParmVarDecl", parmDecls, cutOff:['CompoundStmt']);
 
@@ -150,14 +150,16 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   final dartParams = <String>[];
   var isTranslatable2Dart = false;
   for (var p in parmDecls) {
+    String pname = p.name ?? String.fromCharCode(Decl.randomLetter(97));
+
     var translatedFfiType = ffiType(p, typedefs, log);
 
-    ffiParams.add('$translatedFfiType ${p.name}');
+    ffiParams.add('$translatedFfiType ${pname}');
     var dartType = _ffiBasicType2DartTable[translatedFfiType];
 
     var hasTranslation = dartType != null;
     isTranslatable2Dart = isTranslatable2Dart || hasTranslation;
-    dartParams.add((hasTranslation ? dartType : translatedFfiType) + ' ${p.name}');
+    dartParams.add((hasTranslation ? dartType : translatedFfiType) + ' ${pname}');
   }
 
   var dartTypedef = !isTranslatable2Dart ? "" :
