@@ -142,7 +142,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
   // Don't remove the empty name param, because 'null' will pop up
   parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
-  fun.gather("ParmVarDecl", parmDecls);
+  fun.gather("ParmVarDecl", parmDecls, cutOff:['CompoundStmt']);
 
   final rawParams = parmDecls.map((p) => desugar(p.type, typedefs)).toList();
 

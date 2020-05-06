@@ -152,10 +152,8 @@ class Decl {
 
     if (inner != null) {
       switch(kind) {
-        case "FunctionDecl" :
+        case "CompoundStmt" :
           break; // ignore the implementation details
-        case "FullComment" :
-          break;
         case "FunctionProtoType":
           break;
         default:
@@ -165,39 +163,40 @@ class Decl {
   }
 
   void gather(String kind, List<Decl> list, {List<String> cutOff}) {
-    if (this.kind == kind) {
-      list.add(this);
+    if (this.kind == 'FullComment') {
+      return;
+    }else if(cutOff != null && cutOff.contains(this.kind)) {
+      return;
+    }else if (this.kind == kind) {
+      list.add(this); // 1st case
     }
 
     if (inner != null) {
-      switch (kind) {
-        case "FullComment" :
-          break;
-        default:
-          for (var n in inner)
-          {
-            if (cutOff != null && cutOff.contains(n.kind)) {
-              continue;
-            }
-
-            n.gather(kind, list);
-          }
+      for (var n in inner) {
+        n.gather(kind, list, cutOff:cutOff); // recursion case
       }
     }
   }
 
   Decl find(String kind) {
+    if (this.kind == 'FullComment') {
+      return null;
+    }
+
+    if (this.kind == kind) {
+      return this;
+    }
+
+    Decl firstResult;
     if (inner != null) {
       for (Decl e in inner) {
-        if (kind == e.kind) {
-          return e;
+        firstResult = e.find(kind);
+        if (firstResult != null) {
+          return firstResult;
         }
       }
-
-      for (Decl e in inner) {
-        return e.find(kind);
-      }
     }
+
     return null;
   }
 }

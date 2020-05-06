@@ -87,7 +87,7 @@ class ASTResolver implements Builder {
     writeJson(step, inputId, enumDeclList, Infix.e.index);
 
     /// Cut off for nested TypedefDecl in FunctionDecls
-    root.gather("TypedefDecl", typedefList, cutOff: ['FunctionDecl']);
+    root.gather("TypedefDecl", typedefList, cutOff: ['FunctionDecl', 'CompoundStmt']);
 
     final simpleTypedefList = typedefList.map((t) => simplifyDeclType(t)).toList();
 
