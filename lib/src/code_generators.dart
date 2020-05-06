@@ -170,6 +170,10 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
 
 
   String funName = fun.name;
+  String funBody = (fun.useAsTypedef ?? false) ? '' :
+  '''
+  final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction();
+  ''';
 
   return
     '''
@@ -178,7 +182,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
     ${genTypedef("ffi", funName, ffiParams)}
     ${dartTypedef}
     
-    final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction(); 
+    $funBody
     ''';
 }
 
