@@ -171,7 +171,6 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
 
   String funName = fun.name;
 
-  // TODO add static final const?
   return
     '''
     // ${ids}
@@ -179,7 +178,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
     ${genTypedef("ffi", funName, ffiParams)}
     ${dartTypedef}
     
-    ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction(); 
+    final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction(); 
     ''';
 }
 
@@ -193,6 +192,10 @@ ${funs.map((f) => funPrep(f,
     .toList().join('\n\n')}
 ''';
 
+// Add when necessary to see the typedefs
+//  /*
+//  ${typedefs.map((s) => '${s.name}: ' + s.type.toString()).toList().join("\n  ")}
+//  */
 String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 import "dart:ffi";
@@ -212,10 +215,6 @@ class Binding {
     return lib.lookup<NativeFunction<T>>(name);
   }
 
-  /*
-  ${typedefs.map((s) => '${s.name}: ' + s.type.toString()).toList().join("\n  ")}
-  */
-    
   ${signatures(funs, typedefs, log)}
 }
 ''';
