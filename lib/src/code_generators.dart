@@ -169,16 +169,17 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
     '${fun.id} (${parmDecls.sublist(1).map((p) => p.id).toList().join(', ')})' : '';
 
 
-  // TODO log.warning("Detected anonymous struct");
+  String funName = fun.name;
 
+  // TODO add static final const?
   return
     '''
-    /*
     // ${ids}
     // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
-    ${genTypedef("ffi", fun.name, ffiParams)}
+    ${genTypedef("ffi", funName, ffiParams)}
     ${dartTypedef}
-    */
+    
+    ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction(); 
     ''';
 }
 
@@ -206,6 +207,10 @@ class Binding {
   
   factory fromLibrary(DynamicLibrary lib) =>
     Binding._(lib);
+    
+  Pointer<NativeFunction<T>> _fn<T extends Function>(String name) {
+    return lib.lookup<NativeFunction<T>>(name);
+  }
 
   /*
   ${typedefs.map((s) => '${s.name}: ' + s.type.toString()).toList().join("\n  ")}
