@@ -95,7 +95,8 @@ class Decl {
   final String valueCategory, value;
   final bool useAsTypedef; // don't actually generate a function for this
 
-  Decl({this.id, this.kind, this.tagUsed, this.name, this.opcode, this.decl, this.inner, this.type, this.valueCategory, this.value, this.useAsTypedef});
+  Decl({this.id, this.kind, this.tagUsed, this.name, this.opcode, this.decl,
+    this.inner, this.type, this.valueCategory, this.value, this.useAsTypedef});
 
   factory Decl.fromJson(Map<String, dynamic> json) => _$DeclFromJson(json);
 
@@ -104,18 +105,20 @@ class Decl {
     return code + random.nextInt(5);
   }
 
-  factory Decl.fromTypedefDecl(Decl decl) {
+  /// For the purpose of generating function ptr typedefs for dart
+  factory Decl.fromTypedefDecl2FunctionDecl(Decl decl) {
     assert(decl.kind == 'TypedefDecl');
 
-    // We can get into trouble by replacing all, due to nested fun ptrs
+    // Replacing first, due to nested fun ptrs
     final qualType = decl.type.qualType.replaceFirst('(*)', '');
-    final parmVarDecls = qualType
-        .substring(qualType.indexOf('(') + 1, qualType.length - 1)
+    final paramGroup = qualType
+        .substring(qualType.indexOf('(') + 1, qualType.length - 1);
+    List<Decl> parmVarDecls = 'void' != paramGroup ? paramGroup
         .split(', ').map((p) => Decl(
           name:
             String.fromCharCode(randomLetter(p[0].codeUnitAt(0)))
           , kind: 'ParmVarDecl'
-          , type: Type(qualType: p))).toList();
+          , type: Type(qualType: p))).toList() : [];
     return Decl(
         useAsTypedef: true,
         kind: 'FunctionDecl',
@@ -129,7 +132,11 @@ class Decl {
 
   @override
   String toString() {
-    return """${id} ${kind} ${name} ${type}""";
+    return
+    """
+    ${id} ${kind} ${name}
+      ${type}
+    """;
   }
 
   void concatTree(int depth, Logger logger) {

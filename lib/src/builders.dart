@@ -4,6 +4,7 @@ import 'package:glob/glob.dart';
 
 import 'package:dart_ast_json/src/code_generators.dart';
 import 'package:dart_ast_json/src/serializers.dart';
+import 'parser.dart';
 
 final jsonDecoder = JsonDecoder();
 final jsonEncoder = JsonEncoder();
@@ -85,15 +86,44 @@ class ASTResolver implements Builder {
 
     writeJson(step, inputId, enumDeclList, Infix.e.index);
 
+    /// Cut off for nested TypedefDecl in FunctionDecls
     root.gather("TypedefDecl", typedefList, cutOff: ['FunctionDecl']);
-    writeJson(step, inputId, typedefList.map((t) => simplifyDeclType(t)).toList(), Infix.t.index);
 
+    final simpleTypedefList = typedefList.map((t) => simplifyDeclType(t)).toList();
+
+    final filtered = simpleTypedefList.where((t) =>
+        !t.type.qualType.contains('(')
+    ).toList();
+
+    final filteredFunPtrs = simpleTypedefList.where((t) =>
+        t.type.qualType.contains('(') &&
+        (t.type.qualType.indexOf(')') + 1) == t.type.qualType.lastIndexOf('(')
+    ).toList();
+
+//    print(filteredFunPtrs);
+//    print('====');
+
+    final extractable = simpleTypedefList.where((t) =>
+      t.type.qualType.contains('(') &&
+      (t.type.qualType.indexOf(')') + 1) < t.type.qualType.lastIndexOf('(') &&
+      !t.type.qualType.contains('anonymous') && // struct (anonymous...
+      !t.type.qualType.startsWith('__')
+    ).toList();
+
+//    print(extractable);
+
+    extractNestedFunPtrs(extractable, filtered..addAll(filteredFunPtrs));
+    writeJson(step, inputId, filtered, Infix.t.index);
+
+    /// Cut off for nested FunctionDecls in CompoundStmts (aka function body)
     // TODO ignore FunctionDecl within FunctionDecl (premature opt?)
     root.gather("FunctionDecl", functionList, cutOff: ['CompoundStmt']);
     // filter out underscored functions
     writeJson(step, inputId,
         functionList.where((f) => !f.name.startsWith("_")).toList(), Infix.f.index);
 
+    /// Cut off for nested RecordDecl in FunctionDecl,
+    /// i.e. structs in the function body)
     // TODO match by Decl.id on the typedefs, i.e. both for enums and structs
     root.gather("RecordDecl", structList, cutOff: ['FunctionDecl']);
     writeJson(step, inputId, structList, Infix.s.index);
@@ -165,17 +195,15 @@ class FunctionBuilder extends _Builder {
     final typeDefsInputId = await step.findAssets(new Glob('**tjson')).first;
     final typedefDecls = await listDecl(step, typeDefsInputId);
 
-    // add function pointer references from c typedefs
-    // for dart's typedef code generation
-    final unresolvedTypedefs = typedefDecls.where(
+    var functionFromTypedefs = typedefDecls.where(
         (t) =>
             (!t.name.startsWith('__') && // skip internal typedefs
             !t.type.qualType.startsWith('__')) && // skip internal types
             t.type.qualType.contains('(')) // most likely a typedef for a function (ptr) type
-            .map((d) => Decl.fromTypedefDecl(d)).toList();
+            .map((d) => Decl.fromTypedefDecl2FunctionDecl(d)).toList();
 
     await step.writeAsString(inputId.changeExtension(output),
-        functionBinding(unresolvedTypedefs + functionDecls, typedefDecls, log));
+        functionBinding(functionFromTypedefs + functionDecls, typedefDecls, log));
 
   }
 }

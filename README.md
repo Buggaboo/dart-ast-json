@@ -8,6 +8,12 @@ Access nested enums and structs in a struct
 [See this work around](https://github.com/dart-lang/sdk/issues/37271#issuecomment-502946889)
 
 
+Run program
+===========
+```bash
+pub run build_runner build
+```
+
 Handy commands
 ==============
 

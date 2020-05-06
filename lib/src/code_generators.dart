@@ -140,7 +140,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   final parmDecls = <Decl>[];
 
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
-  // Don't remove the name parama, because 'null' will pop up
+  // Don't remove the empty name param, because 'null' will pop up
   parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
   fun.gather("ParmVarDecl", parmDecls);
 
@@ -151,6 +151,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   var isTranslatable2Dart = false;
   for (var p in parmDecls) {
     var translatedFfiType = ffiType(p, typedefs, log);
+
     ffiParams.add('$translatedFfiType ${p.name}');
     var dartType = _ffiBasicType2DartTable[translatedFfiType];
 
@@ -162,10 +163,16 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   var dartTypedef = !isTranslatable2Dart ? "" :
     genTypedef("dart", fun.name, dartParams);
 
+  final ids = fun.id != null ?
+    '${fun.id} (${parmDecls.sublist(1).map((p) => p.id).toList().join(', ')})' : '';
+
+
+  // TODO log.warning("Detected anonymous struct");
+
   return
     '''
     /*
-    // ${fun.id} (${parmDecls.sublist(1).map((p) => p.id).toList().join(', ')})
+    // ${ids}
     // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
     ${genTypedef("ffi", fun.name, ffiParams)}
     ${dartTypedef}
