@@ -171,30 +171,26 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
 
   String funName = fun.name;
   String funBody = (fun.useAsTypedef ?? false) ? '' :
-  '''
-  final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction();
-  ''';
+  'final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction();';
 
   return
-    '''
-    // ${ids}
-    // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
-    ${genTypedef("ffi", funName, ffiParams)}
-    ${dartTypedef}
-    
-    $funBody
-    ''';
+  '''
+  // ${ids}
+  // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
+  ${genTypedef("ffi", funName, ffiParams)}
+  ${dartTypedef}
+  
+  ${funBody}
+  ''';
 }
 
 String genTypedef(String suffix, String funName, List<String> params) =>
 'typedef ${funName}_${suffix} = ${params[0].trim()} Function(${params.sublist(1).join(', ')});';
 
 String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
-'''
-${funs.map((f) => funPrep(f,
+  funs.map((f) => funPrep(f,
     Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log))
-    .toList().join('\n\n')}
-''';
+    .toList().join('\n\n');
 
 // Add when necessary to see the typedefs
 //  /*
