@@ -66,8 +66,11 @@ class ASTResolver implements Builder {
     final functionList = <Decl>[];
     final typedefList  = <Decl>[];
 
-    root.gather("EnumDecl", enumDeclList);
-    root.gather("EnumType", enumTypeList); // contains the actual names
+    root.gather("EnumDecl", enumDeclList,
+        cutOff: ['FunctionDecl', 'CompoundStmt', 'RecordDecl']);
+    // EnumType contains the actual names
+    root.gather("EnumType", enumTypeList,
+        cutOff: ['FunctionDecl', 'CompoundStmt', 'RecordDecl']);
 
     final typedefEnumNames = Map.fromIterable(
         enumTypeList.where((e) => e.decl != null && e.type != null).toList(),
@@ -87,7 +90,8 @@ class ASTResolver implements Builder {
     writeJson(step, inputId, enumDeclList, Infix.e.index);
 
     /// Cut off for nested TypedefDecl in FunctionDecls
-    root.gather("TypedefDecl", typedefList, cutOff: ['FunctionDecl', 'CompoundStmt']);
+    root.gather("TypedefDecl", typedefList,
+        cutOff: ['FunctionDecl', 'CompoundStmt', 'RecordDecl']);
 
     final simpleTypedefList = typedefList.map((t) => simplifyDeclType(t)).toList();
 
@@ -125,7 +129,7 @@ class ASTResolver implements Builder {
     /// Cut off for nested RecordDecl in FunctionDecl,
     /// i.e. structs in the function body)
     // TODO match by Decl.id on the typedefs, i.e. both for enums and structs
-    root.gather("RecordDecl", structList, cutOff: ['FunctionDecl']);
+    root.gather("RecordDecl", structList, cutOff: ['FunctionDecl', 'CompoundStmt']);
     writeJson(step, inputId, structList, Infix.s.index);
   }
 
@@ -208,11 +212,13 @@ class FunctionBuilder extends _Builder {
   }
 }
 
+/// Also translates unions
 class StructBuilder extends _Builder {
 
   const StructBuilder(): super(Infix.s);
 
   @override
   Future<void> build(BuildStep step) async {
+
   }
 }
