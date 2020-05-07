@@ -189,7 +189,7 @@ String genTypedef(String suffix, String funName, List<String> params) =>
 
 String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
   funs.map((f) => funPrep(f,
-    Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log))
+    Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log)) // TODO process earlier in the ASTBuilder
     .toList().join('\n\n');
 
 // Add when necessary to see the typedefs
@@ -199,9 +199,12 @@ String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 import "dart:ffi";
-import "dart:io";
+import "dart:io" show Platform;
 import "dart:typed_data"
 import 'package:ffi/ffi.dart';
+// TODO import '<structs>.s.dart';
+
+// ignore_for_file: camel_case_types
 
 class Binding {
   final DynamicLibrary lib;
@@ -217,4 +220,40 @@ class Binding {
 
   ${signatures(funs, typedefs, log)}
 }
+''';
+
+
+/// Don't finalize
+String declareField(Decl field, Map<String, Decl> typedefs, Logger log) =>
+'  // ${field.id}\n  ${ffiType(field, typedefs, log)} ${field.name};';
+
+String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
+  final fieldsDecl = <Decl>[];
+  decl.gather('FieldDecl', fieldsDecl, cutOff: ['CompoundStmt']);
+
+  final fields = fieldsDecl.map((f) => declareField(f, typedefs, log))
+      .toList().join("\n");
+
+  return declareStructClass(decl, fields);
+}
+
+String declareStructClass(Decl decl, String fields) =>
+'''
+// ${decl.id}
+class ${decl.name} extends Struct {
+$fields
+}
+''';
+
+/// Note: IntPtr seems to be the the correct representation for size_t:
+/// "Represents a native pointer-sized integer in C."
+String declareStructs(List<Decl> recordDecls, Map<String, Decl> typedefs, Logger log) =>
+'''
+import 'dart:ffi';
+import "dart:typed_data";
+import "package:ffi/ffi.dart";
+
+// ignore_for_file: camel_case_types
+
+${recordDecls.map((r) => declareStruct(r, typedefs, log)).toList().join("\n")}
 ''';

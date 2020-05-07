@@ -126,10 +126,18 @@ class ASTResolver implements Builder {
     writeJson(step, inputId,
         functionList.where((f) => !f.name.startsWith("_")).toList(), Infix.f.index);
 
-    /// Cut off for nested RecordDecl in FunctionDecl,
-    /// i.e. structs in the function body)
-    // TODO match by Decl.id on the typedefs, i.e. both for enums and structs
+    /// Collect the fields
     root.gather("RecordDecl", structList, cutOff: ['FunctionDecl', 'CompoundStmt']);
+
+    /// RecordType is a sibling of RecordDecl
+    final recordTypeList = <Decl>[];
+    root.gather("RecordType", recordTypeList, cutOff: ['FunctionDecl', 'CompoundStmt']);
+
+    final recordDict = <String, Decl>{};
+    recordTypeList.forEach((e) => recordDict[e.decl.id] = e);
+    structList.where((r) => r.tagUsed == 'struct')
+        .forEach((r) => r.name = recordDict[r.id]?.type?.qualType);
+
     writeJson(step, inputId, structList, Infix.s.index);
   }
 
@@ -196,8 +204,8 @@ class FunctionBuilder extends _Builder {
     final inputId = step.inputId;
     final functionDecls = await listDecl(step, inputId);
 
-    final typeDefsInputId = await step.findAssets(new Glob('**tjson')).first;
-    final typedefDecls = await listDecl(step, typeDefsInputId);
+    final typedefsInputId = await step.findAssets(new Glob('**tjson')).first;
+    final typedefDecls = await listDecl(step, typedefsInputId);
 
     var functionFromTypedefs = typedefDecls.where(
         (t) =>
@@ -219,6 +227,16 @@ class StructBuilder extends _Builder {
 
   @override
   Future<void> build(BuildStep step) async {
+    final inputId = step.inputId;
+    final decls = await listDecl(step, inputId);
 
+    final typedefsInputId = await step.findAssets(new Glob('**tjson')).first;
+    final typedefDecls = await listDecl(step, typedefsInputId);
+
+    final typedefMap = <String, Decl>{};
+    typedefDecls.forEach((t) => typedefMap[t.name] = t);
+
+    await step.writeAsString(inputId.changeExtension(output),
+        declareStructs(decls, typedefMap, log));
   }
 }

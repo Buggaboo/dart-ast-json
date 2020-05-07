@@ -1,5 +1,8 @@
 import 'serializers.dart';
 
+// Disable some linter rules for files generated here
+// ignore_for_file: camel_case_types
+
 String incrementSymbol(String str) => String.fromCharCodes(str.codeUnits.map((s) => normalizeSymbol(s + 1)));
 
 final leftP  = '('.codeUnitAt(0);
