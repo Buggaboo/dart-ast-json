@@ -1,10 +1,6 @@
 targets:
   $default:
     builders:
-#      json_serializable: # couldn't use the damn generated .g.dart in the builder for some reason
-#        options:
-#          create_factory: true
-#          nullable: true
       dart_ast_json|resolver: # put AST JSON on a diet
         enabled: True
       dart_ast_json|functionBuilder: # functions
