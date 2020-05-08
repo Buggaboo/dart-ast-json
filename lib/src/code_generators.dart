@@ -223,9 +223,17 @@ class Binding {
 ''';
 
 
+String declareFieldType(Decl field, Map<String, Decl> typedefs, Logger log) {
+  final translatedFfiType = ffiType(field, typedefs, log);
+  final dartType = _ffiBasicType2DartTable[translatedFfiType];
+
+  return dartType != null ? '@$translatedFfiType() $dartType' :
+    translatedFfiType;
+}
+
 /// Don't finalize
 String declareField(Decl field, Map<String, Decl> typedefs, Logger log) =>
-'  // ${field.id}\n  ${ffiType(field, typedefs, log)} ${field.name};';
+'  // ${field.id}\n  ${declareFieldType(field, typedefs, log)} ${field.name};';
 
 String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
   final fieldsDecl = <Decl>[];
