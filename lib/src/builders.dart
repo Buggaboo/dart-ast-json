@@ -135,10 +135,10 @@ class ASTResolver implements Builder {
 
     final recordDict = <String, Decl>{};
     recordTypeList.forEach((e) => recordDict[e.decl.id] = e);
-    structList.where((r) => r.tagUsed == 'struct')
-        .forEach((r) => r.name = recordDict[r.id]?.type?.qualType);
+    structList.forEach((r) => r.name = recordDict[r.id]?.type?.qualType);
 
-    writeJson(step, inputId, structList, Infix.s.index);
+    final structsWithNames = structList.where((s) => s.name != null).toList();
+    writeJson(step, inputId, structsWithNames, Infix.s.index);
   }
 
   writeJson(BuildStep step, AssetId assetId, List<Decl> list, int index) async {
