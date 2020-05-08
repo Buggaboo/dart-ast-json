@@ -248,7 +248,7 @@ String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
 String declareStructClass(Decl decl, String fields) =>
 '''
 // ${decl.id}
-class ${decl.name} extends Struct {
+class ${decl.name} extends Struct ${ decl?.tagUsed == 'union' ? '/* union */ ' : ''}{
 $fields
 }
 ''';
