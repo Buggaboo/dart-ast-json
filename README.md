@@ -14,6 +14,13 @@ Run program
 pub run build_runner build
 ```
 
+Struct alignment & padding
+=========
+* [Aligment](https://github.com/dart-lang/sdk/blob/master/pkg/vm/lib/transformations/ffi.dart)
+* [The lost art of Structure Packing](http://www.catb.org/esr/structure-packing/)
+* [Padding in compilers](https://metricpanda.com/rival-fortress-update-35-avoiding-automatic-structure-padding-in-c/)
+* [Padding in Dart (yuck)](https://github.com/timsneath/dart_console/blob/28f333aff8f508d10c0bf8431b54bbb813584cbd/lib/src/ffi/unix/termios.dart#L87-127)
+
 Handy commands
 ==============
 
@@ -22,52 +29,4 @@ Sort out types in the AST JSON:
 grep desugaredQualType web/miniaudio.json | grep -v __attr | sed -e 's/^[ \t]*//' | sort | uniq | less
 ```
 
-Alignment
-=========
-[Aligment](https://github.com/dart-lang/sdk/blob/master/pkg/vm/lib/transformations/ffi.dart)
 
-
-Type conversions
-================
-```dart
-Double
-Float
-Int8
-Int16
-Int32
-Int64
-IntPtr
-NativeApi
-NativeFunction
-NativeType
-Pointer
-Struct
-Uint8
-Uint16
-Uint32
-Uint64
-Unsized
-Void
-```
-
-EXTENSIONS
-
-```dart
-DoublePointer
-DynamicLibraryExtension
-FloatPointer
-Int8Pointer
-Int16Pointer
-Int32Pointer
-Int64Pointer
-IntPtrPointer
-NativeFunctionPointer
-NativePort
-PointerPointer
-StructAddressOf
-StructPointer
-Uint8Pointer
-Uint16Pointer
-Uint32Pointer
-Uint64Pointer
-```
