@@ -58,22 +58,21 @@ String enumToClass (Decl e, [Logger log]) {
     ''' : classDef;
 }
 
-String desugar(Type origType, Map<String, Decl> typedefs, Logger log) {
+String desugar(Type origType, Map<String, Decl> typedefs) {
   final scrubbed = origType.scrubbed;
   final td = typedefs[scrubbed];
 
   if (td == null) { return origType.qualType; }
 
-  // enum, then convert to int scalar type
+  // enum <name> -> int
   if (origType.isEnum) {
-    log.info('$scrubbed: ${td.type.qualType}');
     return td.type.qualType;
   }
 
+  // <name> -> enum <name> -> int
   if (td.type.isEnum) {
     final secondDegree = typedefs[td.type.qualType];
     if (secondDegree != null) {
-      log.info('$scrubbed: ${td.type.qualType} -> ${secondDegree.type}');
       return secondDegree.type.qualType;
     }
   }
@@ -89,7 +88,7 @@ String desugar(Type origType, Map<String, Decl> typedefs, Logger log) {
 String pointerize(String p) => 'Pointer<$p>';
 
 String ffiType(Decl d, Map<String, Decl> typedefs, Logger log) {
-  final t = Type(qualType: desugar(d.type, typedefs, log));
+  final t = Type(qualType: desugar(d.type, typedefs));
 
   String result = t.qualType;
   String replaceWith = '';
@@ -157,7 +156,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
   fun.gather("ParmVarDecl", parmDecls, cutOff:['CompoundStmt']);
 
-  final rawParams = parmDecls.map((p) => desugar(p.type, typedefs, log)).toList();
+  final rawParams = parmDecls.map((p) => desugar(p.type, typedefs)).toList();
 
   final ffiParams = <String>[];
   final dartParams = <String>[];

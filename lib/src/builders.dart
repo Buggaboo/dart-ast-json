@@ -106,8 +106,7 @@ class ASTResolver implements Builder {
       ));
     }
 
-    // TODO disable
-    simpleTypedefList.forEach((e) => log.info(e));
+//    simpleTypedefList.forEach((e) => log.info(e));
 
     final filtered = simpleTypedefList.where((t) =>
         !t.type.qualType.contains('(')
@@ -125,13 +124,10 @@ class ASTResolver implements Builder {
       !t.type.qualType.startsWith('__')
     ).toList();
 
-//    print(extractable);
-
     extractNestedFunPtrs(extractable, filtered..addAll(filteredFunPtrs));
     writeJson(step, inputId, filtered, Infix.t.index);
 
     /// Cut off for nested FunctionDecls in CompoundStmts (aka function body)
-    // TODO ignore FunctionDecl within FunctionDecl (premature opt?)
     root.gather("FunctionDecl", functionList, cutOff: ['CompoundStmt']);
     // filter out underscored functions
     writeJson(step, inputId,
