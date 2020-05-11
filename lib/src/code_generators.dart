@@ -58,23 +58,38 @@ String enumToClass (Decl e, [Logger log]) {
     ''' : classDef;
 }
 
-String desugar(Type origType, Map<String, Decl> typedefs) {
+String desugar(Type origType, Map<String, Decl> typedefs, Logger log) {
   final scrubbed = origType.scrubbed;
-  final typedef = typedefs[scrubbed];
-  if (typedef == null) { return origType.qualType; }
+  final td = typedefs[scrubbed];
+
+  if (td == null) { return origType.qualType; }
+
+  // enum, then convert to int scalar type
+  if (origType.isEnum) {
+    log.info('$scrubbed: ${td.type.qualType}');
+    return td.type.qualType;
+  }
+
+  if (td.type.isEnum) {
+    final secondDegree = typedefs[td.type.qualType];
+    if (secondDegree != null) {
+      log.info('$scrubbed: ${td.type.qualType} -> ${secondDegree.type}');
+      return secondDegree.type.qualType;
+    }
+  }
 
   // function pointer
-  if (typedef.type.qualType.contains('(*)')) {
+  if (td.type.qualType.contains('(*)')) {
     return origType.qualType.replaceAll(scrubbed, 'fn_ptr $scrubbed');
   }
 
-  return origType.qualType.replaceAll(scrubbed, typedef.type.qualType);
+  return origType.qualType.replaceAll(scrubbed, td.type.qualType);
 }
 
 String pointerize(String p) => 'Pointer<$p>';
 
 String ffiType(Decl d, Map<String, Decl> typedefs, Logger log) {
-  final t = Type(qualType: desugar(d.type, typedefs));
+  final t = Type(qualType: desugar(d.type, typedefs, log));
 
   String result = t.qualType;
   String replaceWith = '';
@@ -142,7 +157,7 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
   parmDecls.add(Decl(id: fun.id, name: '', type: Type(qualType: rawFunReturnType)));
   fun.gather("ParmVarDecl", parmDecls, cutOff:['CompoundStmt']);
 
-  final rawParams = parmDecls.map((p) => desugar(p.type, typedefs)).toList();
+  final rawParams = parmDecls.map((p) => desugar(p.type, typedefs, log)).toList();
 
   final ffiParams = <String>[];
   final dartParams = <String>[];
@@ -191,9 +206,6 @@ String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
     .toList().join('\n\n');
 
 // Add when necessary to see the typedefs
-//  /*
-//  ${typedefs.map((s) => '${s.name}: ' + s.type.toString()).toList().join("\n  ")}
-//  */
 String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 import "dart:ffi";

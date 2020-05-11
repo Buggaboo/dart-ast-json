@@ -160,11 +160,7 @@ class Decl {
 
   @override
   String toString() {
-    return
-    """
-    ${id} ${kind} ${name}
-      ${type}
-    """;
+    return '${id} ${kind} ${name}, type: ${type}';
   }
 
   void concatTree(int depth, Logger logger) {

@@ -95,6 +95,20 @@ class ASTResolver implements Builder {
 
     final simpleTypedefList = typedefList.map((t) => simplifyDeclType(t)).toList();
 
+    /// add `enum X -> intY`, made up typedefs
+    for (var e in enumDeclList) {
+      final qualType = e?.find('EnumConstantDecl').type.qualType;
+      if (qualType == null || e.name == null) { continue; }
+      simpleTypedefList.add(Decl(
+          id: e.id,
+          name: 'enum ${e.name}',
+          type: Type(qualType: qualType)
+      ));
+    }
+
+    // TODO disable
+    simpleTypedefList.forEach((e) => log.info(e));
+
     final filtered = simpleTypedefList.where((t) =>
         !t.type.qualType.contains('(')
     ).toList();
@@ -103,9 +117,6 @@ class ASTResolver implements Builder {
         t.type.qualType.contains('(') &&
         (t.type.qualType.indexOf(')') + 1) == t.type.qualType.lastIndexOf('(')
     ).toList();
-
-//    print(filteredFunPtrs);
-//    print('====');
 
     final extractable = simpleTypedefList.where((t) =>
       t.type.qualType.contains('(') &&
