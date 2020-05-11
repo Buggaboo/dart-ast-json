@@ -108,6 +108,13 @@ String ffiType(Decl d, Map<String, Decl> typedefs, Logger log) {
     result = replaceWith;
   }
 
+  if (result.startsWith('fn_ptr ')) {
+    // TODO check if really necessary (the fn ptr is a ptr)
+    // otherwise it's pass by value-ish for dart?
+    // https://stackoverflow.com/questions/6893285/why-do-function-pointer-definitions-work-with-any-number-of-ampersands-or-as
+    result = 'Pointer<NativeFunction<${result.substring(7)}>>';
+  }
+
   // replace pointers
   if (result.endsWith('*')) {
     result = result.substring(0, result.length - t.hasPointers).trim();
