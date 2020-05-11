@@ -38,14 +38,14 @@ String enumToClass (Decl e, [Logger log]) {
     "" : " /* TODO check actual value ${d.id} */";
 
   final fields = constants.map((c) =>
-    'static const int ${c.name}${opCodeWithInteger(c, i++)};${addWarning(c)}')
+    '  static const int ${c.name}${opCodeWithInteger(c, i++)};${addWarning(c)}')
     .toList().join("\n  ");
 
   final classDef =
   '''
   /* ${e.id} */
   class ${e.name} {
-    ${fields}
+  $fields
   }
   
   ''';
