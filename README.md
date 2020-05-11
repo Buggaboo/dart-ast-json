@@ -8,7 +8,7 @@ Dart FFI binding generator for any LLVM JSON AST dump
 
 ## Current status WIP
 * Working on examples and tests
-* Waiting for the dart team to provide a [padding mechanism](https://github.com/dart-lang/sdk/issues/35763) to solve alignment issues.
+* Waiting for the dart team to provide a [offset mechanism](https://github.com/dart-lang/sdk/issues/35763) to solve alignment/padding issues.
 
 ## Caveats
 ### The generated JSON will be different per ARCH and OS
@@ -24,10 +24,10 @@ Grouping commonalities between generated ARCH and OSs is still a manual task.
 6. [No support for non scalar struct fields, e.g. `int[100][100] meh`](https://github.com/timsneath/dart_console/blob/28f333aff8f508d10c0bf8431b54bbb813584cbd/lib/src/ffi/unix/termios.dart#L87-L127)
 
 ## Workarounds
-0. Each struct depends on the largest member (e.g. another struct), to determine its alignment and padding, use -Wpadded in clang
+0. Each struct depends on the largest member (e.g. another struct), to determine its alignment and padding, use `-Wpadded` in clang
 1. Just don't, especially for big padded structs, don't overflow the stack.
 2. Just do it.
-3. Clang has a '-Wpadded' that could provide clues on how to spatially optimize (instead of packing)
+3. Clang has a `-Wpadded` that could provide clues on how to spatially optimize (instead of packing)
 4. Don't. Instead use a machine word sized integer, and provide masking where necessary; explicit is better.
 5. Use Struct from dart's FFI, but use a single memory location, e.g. a `Pointer<Void>` as the only field.
 6. The workaround is to repeatedly state the field `@Int32 meh_00; @Int32 meh_01; // etc.` to determine the proper alignment and padding. Yuck. 
@@ -49,12 +49,15 @@ pub run build_runner build
 * [The lost art of Structure Packing](http://www.catb.org/esr/structure-packing/)
 * [Padding in compilers](https://metricpanda.com/rival-fortress-update-35-avoiding-automatic-structure-padding-in-c/)
 
-Handy commands
-==============
+## Handy commands
 
 Sort out types in the AST JSON:
 ```bash
 grep desugaredQualType web/miniaudio.json | grep -v __attr | sed -e 's/^[ \t]*//' | sort | uniq | less
 ```
 
+## Links
+* [Pre-processor directives (macro definitions) for ARCH](https://sourceforge.net/p/predef/wiki/Architectures/)
+* [Boost lib for C pre-processor directives for arch/os detection](https://www.boost.org/doc/libs/1_72_0/doc/html/predef.html)
+* [Moar](https://stackoverflow.com/questions/142508/how-do-i-check-os-with-a-preprocessor-directive)
 
