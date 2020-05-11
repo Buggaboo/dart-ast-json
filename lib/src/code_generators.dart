@@ -58,15 +58,6 @@ String enumToClass (Decl e, [Logger log]) {
     ''' : classDef;
 }
 
-// TODO remove
-/** Example
-  typedef obx_query_visit_native_t = Int32 Function(Pointer<Void> query,
-    Pointer<NativeFunction<obx_data_visitor_native_t>> visitor, Pointer<Void> user_data, Uint64 offset, Uint64 limit);
-
-  typedef obx_query_visit_dart_t = int Function(Pointer<Void> query,
-    Pointer<NativeFunction<obx_data_visitor_native_t>> visitor, Pointer<Void> user_data, int offset, int limit);
-*/
-
 String desugar(Type origType, Map<String, Decl> typedefs) {
   final scrubbed = origType.scrubbed;
   final typedef = typedefs[scrubbed];
