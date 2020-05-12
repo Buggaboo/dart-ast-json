@@ -1,5 +1,5 @@
 # dart_ast_json
-Dart FFI binding generator for any LLVM JSON AST dump
+Dart FFI binding generator for any LLVM Clang JSON AST dump
 
 ## Dependencies
 * build_runner
@@ -21,7 +21,8 @@ Grouping commonalities between generated ARCH and OSs is still a manual task.
 3. [Packed structs](https://github.com/dart-lang/sdk/issues/38158)
 4. [No bitfields, DIY bitmasking](https://github.com/dart-lang/sdk/issues/38954)
 5. [No union](https://github.com/dart-lang/sdk/issues/38491)
-6. [No support for non scalar struct fields, e.g. `int[100][100] meh`](https://github.com/timsneath/dart_console/blob/28f333aff8f508d10c0bf8431b54bbb813584cbd/lib/src/ffi/unix/termios.dart#L87-L127)
+6. [No support for non scalar struct fields, e.g. `int meh[2];`](https://github.com/timsneath/dart_console/blob/28f333aff8f508d10c0bf8431b54bbb813584cbd/lib/src/ffi/unix/termios.dart#L87-L127)
+7. [And more...](https://github.com/dart-lang/sdk/projects/13#card-16916690)
 
 ## Workarounds
 0. Each struct depends on the largest member (e.g. another struct), to determine its alignment and padding, use `-Wpadded` in clang
@@ -30,7 +31,7 @@ Grouping commonalities between generated ARCH and OSs is still a manual task.
 3. Clang has a `-Wpadded` that could provide clues on how to spatially optimize (instead of packing)
 4. Don't. Instead use a machine word sized integer, and provide masking where necessary; explicit is better.
 5. Use Struct from dart's FFI, but use a single memory location, e.g. a `Pointer<Void>` as the only field.
-6. The workaround is to repeatedly state the field `@Int32 meh_00; @Int32 meh_01; // etc.` to determine the proper alignment and padding. Yuck. 
+6. The workaround is to repeatedly state the field `@Int32 int meh_0, meh_1; // etc.` to determine the proper alignment and padding. Yuck. 
 
 ## Run program
 
@@ -45,7 +46,7 @@ pub run build_runner build
 
 ## Struct alignment & padding
 
-* [Aligment](https://github.com/dart-lang/sdk/blob/master/pkg/vm/lib/transformations/ffi.dart)
+* [Alignment](https://github.com/dart-lang/sdk/blob/master/pkg/vm/lib/transformations/ffi.dart)
 * [The lost art of Structure Packing](http://www.catb.org/esr/structure-packing/)
 * [Padding in compilers](https://metricpanda.com/rival-fortress-update-35-avoiding-automatic-structure-padding-in-c/)
 
