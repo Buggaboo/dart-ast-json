@@ -73,8 +73,9 @@ class Type {
   // - asterisks
   String get scrubbed => qualType
       .replaceAll('*', '')
-      .replaceAll('unsigned ', '')
-      .replaceAll('signed ', '')
+      .replaceFirst('unsigned ', '')
+      .replaceFirst('signed ', '')
+      .replaceFirst('restrict', '')
       .trim();
 
   bool get resemblesNative => NativeScalar[scrubbed] != null;

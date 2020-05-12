@@ -79,10 +79,10 @@ String desugar(Type origType, Map<String, Decl> typedefs) {
 
   // function pointer
   if (td.type.qualType.contains('(*)')) {
-    return origType.qualType.replaceAll(scrubbed, 'fn_ptr $scrubbed');
+    return origType.qualType.replaceFirst(scrubbed, 'fn_ptr $scrubbed');
   }
 
-  return origType.qualType.replaceAll(scrubbed, td.type.qualType);
+  return origType.qualType.replaceFirst(scrubbed, td.type.qualType);
 }
 
 String pointerize(String p) => 'Pointer<$p>';
@@ -118,6 +118,14 @@ String ffiType(Decl d, Map<String, Decl> typedefs, Logger log) {
     // otherwise it's pass by value-ish for dart?
     // https://stackoverflow.com/questions/6893285/why-do-function-pointer-definitions-work-with-any-number-of-ampersands-or-as
     result = 'Pointer<NativeFunction<${result.substring(7)}>>';
+  }
+
+  if (result.startsWith('union ')) {
+    result = result.substring(5);
+  }
+
+  if (result.startsWith('struct ')) {
+    result = result.substring(6);
   }
 
   // replace pointers
@@ -241,8 +249,14 @@ String declareFieldType(Decl field, Map<String, Decl> typedefs, Logger log) {
 }
 
 /// Don't finalize
-String declareField(Decl field, Map<String, Decl> typedefs, Logger log) =>
-'  // ${field.id}\n  ${declareFieldType(field, typedefs, log)} ${field.name};';
+String declareField(Decl field, Map<String, Decl> typedefs, Logger log) {
+
+  final td = typedefs[field.type.qualType];
+  final type = td?.type?.qualType ?? '';
+
+  return '  // ${field.id} ${type}'
+      '\n  ${declareFieldType(field, typedefs, log)} ${field.name};';
+}
 
 String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
   final fieldsDecl = <Decl>[];
