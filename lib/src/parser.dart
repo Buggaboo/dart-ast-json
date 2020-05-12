@@ -1,6 +1,5 @@
 import 'serializers.dart';
 
-// Disable some linter rules for files generated here
 // ignore_for_file: camel_case_types
 
 String incrementSymbol(String str) => String.fromCharCodes(str.codeUnits.map((s) => normalizeSymbol(s + 1)));
@@ -16,7 +15,7 @@ int _weigh(String str) {
       counter--;
     }
   }
-  return counter; //  == 0;
+  return counter;
 }
 
 List<int> sizesOfSplit(List<String> list) =>
@@ -32,12 +31,9 @@ void _replaceWithSymbol(String prevSymbol, String symbolPrefix,
   final split = stripped.split(', ');
   final listBalance = split.map((s) => _weigh(s)).toList();
 
-//  print('$symbolPrefix: $split');
-//  print('$symbolPrefix: $listBalance');
-
   var unbalanced = false;
   for (int b in listBalance) {
-    if (0 < b /*|| b < 0*/) {
+    if (0 < b) {
       unbalanced = true;
       break;
     }
@@ -75,7 +71,6 @@ void _replaceWithSymbol(String prevSymbol, String symbolPrefix,
     }
   }
 
-//  print('start $start, end $end');
   final pattern = split.sublist(start, end + 1).join(', ');
   newSymbol = incrementSymbol(symbolPrefix);
   dict[newSymbol] = pattern;
