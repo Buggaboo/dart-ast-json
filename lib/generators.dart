@@ -8,5 +8,6 @@ Builder resolver(BuilderOptions options) => ASTResolver();
 
 // the nice bits
 Builder enumBuilder(BuilderOptions options)     => EnumBuilder();
+Builder typedefBuilder(BuilderOptions options)  => TypedefBuilder();
 Builder functionBuilder(BuilderOptions options) => FunctionBuilder();
 Builder structBuilder(BuilderOptions options)   => StructBuilder();

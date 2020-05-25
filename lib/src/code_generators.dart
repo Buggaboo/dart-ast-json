@@ -156,7 +156,7 @@ final _ffiBasicType2DartTable = {
   'Double': _dartTypeFloat
 };
 
-String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
+String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log, [bool isTypedef = false]) {
   final parmDecls = <Decl>[];
 
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
@@ -190,16 +190,18 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log) {
 
 
   String funName = fun.name;
-  String funBody = (fun.useAsTypedef ?? false) ? '' :
+  String funBody = (fun.useAsTypedef ?? false) || isTypedef ? '' :
   'final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction();';
 
+  addTypedef(bool b) => !b ? '// ' : '';
+
+  /// Dart restricts typedefs declarations in types
   return
   '''
   // ${ids}
   // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
-  ${genTypedef("ffi", funName, ffiParams)}
-  ${dartTypedef}
-  
+  ${addTypedef(isTypedef)}${genTypedef("ffi", funName, ffiParams)}
+  ${addTypedef(isTypedef)}${dartTypedef}
   ${funBody}
   ''';
 }
@@ -217,11 +219,12 @@ String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 import "dart:ffi";
 import "dart:io" show Platform;
-import "dart:typed_data"
 import 'package:ffi/ffi.dart';
-// TODO import '<structs>.s.dart';
+import "<TODO typedefs>.dart";
+import "<TODO structs>.dart";
 
 // ignore_for_file: camel_case_types
+// ignore_for_file: non_constant_identifier_names
 
 class Binding {
   final DynamicLibrary lib;
@@ -235,8 +238,24 @@ class Binding {
     return lib.lookup<NativeFunction<T>>(name);
   }
 
-  ${signatures(funs, typedefs, log)}
+${signatures(funs, typedefs, log)}
 }
+''';
+
+String declareCommentedTypedefs(funs, typedefs, log) => funs.map((f) => funPrep(f,
+    Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log, true))
+    .toList().join('\n');
+
+String declareTypedefs(List<Decl> funs, List<Decl> typedefs, Logger log) =>
+'''
+import "dart:ffi";
+import '<TODO struct>.s.dart';
+import 'package:ffi/ffi.dart';
+
+// ignore_for_file: camel_case_types
+// ignore_for_file: non_constant_identifier_names
+
+${declareCommentedTypedefs(funs, typedefs, log)}
 ''';
 
 

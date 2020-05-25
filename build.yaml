@@ -3,11 +3,13 @@ targets:
     builders:
       dart_ast_json|resolver: # put AST JSON on a diet
         enabled: True
+      dart_ast_json|enumBuilder: # enums
+        enabled: True
+      dart_ast_json|typedefBuilder: # typedefs
+        enabled: True
       dart_ast_json|functionBuilder: # functions
         enabled: True
       dart_ast_json|structBuilder: # structs
-        enabled: True
-      dart_ast_json|enumBuilder: # enums
         enabled: True
 
 builders:
@@ -28,6 +30,14 @@ builders:
     build_extensions:
       "$lib$": [ ".e.dart" ]
     required_inputs: ['.ejson']
+    auto_apply: dependents
+    build_to: source
+  typedefBuilder:
+    import: 'package:dart_ast_json/generators.dart'
+    builder_factories: ['typedefBuilder']
+    build_extensions:
+      "$lib$": [ ".t.dart" ]
+    required_inputs: ['.tjson', '.fjson']
     auto_apply: dependents
     build_to: source
   functionBuilder:

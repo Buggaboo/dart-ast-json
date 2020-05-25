@@ -227,6 +227,32 @@ class FunctionBuilder extends _Builder {
   }
 }
 
+class TypedefBuilder extends _Builder {
+  const TypedefBuilder(): super(Infix.t);
+
+  @override
+  Future<void> build(BuildStep step) async {
+
+    final inputId = step.inputId;
+    final typedefDecls = await listDecl(step, inputId);
+
+    final functionInputId = await step.findAssets(new Glob('**fjson')).first;
+    final functionDecls = await listDecl(step, functionInputId);
+
+    // TODO dedup
+    var functionFromTypedefs = typedefDecls.where(
+            (t) =>
+        (!t.name.startsWith('__') && // skip internal typedefs
+            !t.type.qualType.startsWith('__')) && // skip internal types
+            t.type.qualType.contains('(')) // most likely a typedef for a function (ptr) type
+        .map((d) => Decl.fromTypedefDecl2FunctionDecl(d)).toList();
+
+    await step.writeAsString(inputId.changeExtension(output),
+        declareTypedefs(functionFromTypedefs + functionDecls, typedefDecls, log));
+
+  }
+}
+
 /// Also translates unions
 class StructBuilder extends _Builder {
 
