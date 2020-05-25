@@ -156,7 +156,25 @@ final _ffiBasicType2DartTable = {
   'Double': _dartTypeFloat
 };
 
-String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log, [bool isTypedef = false]) {
+String funStringsFns(String ids, String rawParams, String tdFfi, String tdDart, String funBody) =>
+'''
+  // ${ids}
+  // $rawParams
+  // $tdFfi
+  // $tdDart
+  $funBody
+''';
+
+String funStringsTds(String ids, String rawParams, String tdFfi, String tdDart, String funBody) =>
+'''
+// $ids
+// $rawParams
+$tdFfi
+$tdDart
+''';
+
+typedef FunStrings = String Function(String, String, String, String, String);
+String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log, [FunStrings fnLayout = funStringsFns]) {
   final parmDecls = <Decl>[];
 
   final rawFunReturnType = fun.type.qualType.split('(')[0].trim();
@@ -190,20 +208,17 @@ String funPrep(Decl fun, Map<String, Decl> typedefs, Logger log, [bool isTypedef
 
 
   String funName = fun.name;
-  String funBody = (fun.useAsTypedef ?? false) || isTypedef ? '' :
+  String funBody = (fun.useAsTypedef ?? false) ? '' :
   'final ${funName}_${isTranslatable2Dart ? 'dart' : 'ffi'} ${funName} = _fn<${funName}_ffi>("${funName}").asFunction();';
 
-  addTypedef(bool b) => !b ? '// ' : '';
-
   /// Dart restricts typedefs declarations in types
-  return
-  '''
-  // ${ids}
-  // ${rawParams[0]} (${rawParams.sublist(1).join(', ')})
-  ${addTypedef(isTypedef)}${genTypedef("ffi", funName, ffiParams)}
-  ${addTypedef(isTypedef)}${dartTypedef}
-  ${funBody}
-  ''';
+  return fnLayout(
+    ids,
+    '${rawParams[0]} (${rawParams.sublist(1).join(', ')})',
+    '${genTypedef("ffi", funName, ffiParams)}',
+    '${dartTypedef}',
+    funBody
+  );
 }
 
 String genTypedef(String suffix, String funName, List<String> params) =>
@@ -243,7 +258,7 @@ ${signatures(funs, typedefs, log)}
 ''';
 
 String declareCommentedTypedefs(funs, typedefs, log) => funs.map((f) => funPrep(f,
-    Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log, true))
+    Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log, funStringsTds))
     .toList().join('\n');
 
 String declareTypedefs(List<Decl> funs, List<Decl> typedefs, Logger log) =>
