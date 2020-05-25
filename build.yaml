@@ -11,6 +11,8 @@ targets:
         enabled: True
       dart_ast_json|structBuilder: # structs
         enabled: True
+      dart_ast_json|extensionBuilder: # extensions
+        enabled: True
 
 builders:
   resolver:
@@ -54,5 +56,13 @@ builders:
     build_extensions:
       "$lib$": [ ".s.dart" ]
     required_inputs: ['.tjson', '.sjson']
+    auto_apply: dependents
+    build_to: source
+  extensionBuilder:
+    import: 'package:dart_ast_json/generators.dart'
+    builder_factories: ['extensionBuilder']
+    build_extensions:
+      "$lib$": [ ".x.dart" ]
+    required_inputs: ['.tjson', '.sjson', '.layout']
     auto_apply: dependents
     build_to: source

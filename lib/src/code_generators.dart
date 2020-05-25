@@ -316,7 +316,7 @@ $fields
 
 /// Note: IntPtr seems to be the the correct representation for size_t:
 /// "Represents a native pointer-sized integer in C."
-String declareStructs(String importRoot, List<Decl> recordDecls, Map<String, Decl> typedefs, Logger log) =>
+String declareStructs(String importRoot, List<Decl> recordDecls, Map<String, Decl> typedefMap, Logger log) =>
 '''
 import 'dart:ffi';
 import "dart:typed_data";
@@ -326,5 +326,17 @@ import '$importRoot.t.dart';
 // ignore_for_file: camel_case_types
 // ignore_for_file: non_constant_identifier_names
 
-${recordDecls.map((r) => declareStruct(r, typedefs, log)).toList().join("\n")}
+${recordDecls.map((r) => declareStruct(r, typedefMap, log)).toList().join("\n")}
+''';
+
+
+String declareExtensions(String importRoot, String rawRecordLayouts, List<Decl> recordDecls, Map<String, Decl> typedefMap, Logger log) =>
+'''
+import 'dart:ffi';
+import "dart:typed_data";
+import "package:ffi/ffi.dart";
+import '$importRoot.t.dart';
+
+// ignore_for_file: camel_case_types
+// ignore_for_file: non_constant_identifier_names
 ''';

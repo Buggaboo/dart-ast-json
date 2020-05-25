@@ -156,21 +156,7 @@ class ASTResolver implements Builder {
 
 }
 
-abstract class _Builder implements Builder {
-
-  final Infix infix;
-
-  String get output => '.${removeTag(this.infix)}.dart';
-
-  const _Builder(this.infix);
-
-  get _buildExtensions {
-    final untagged = removeTag(this.infix);
-    return {'.${untagged}json' : [output]};
-  }
-
-  @override
-  Map<String, List<String>> get buildExtensions => _buildExtensions;
+mixin DeclUtil {
 
   Future<List<Decl>> listDecl(BuildStep step, AssetId inputId) async {
     final inputString = await step.readAsString(inputId);
@@ -186,7 +172,27 @@ abstract class _Builder implements Builder {
 
 }
 
-extension _AssetId on AssetId {
+abstract class _Builder with DeclUtil implements Builder{
+
+  final Infix infix;
+
+  String get output => '.${removeTag(this.infix)}.dart';
+
+  const _Builder(this.infix);
+
+  get _buildExtensions {
+    final untagged = removeTag(this.infix);
+    return {'.${untagged}json' : [output]};
+  }
+
+  @override
+  Map<String, List<String>> get buildExtensions => _buildExtensions;
+
+
+
+}
+
+extension on AssetId {
   get root => this.pathSegments[1].split('.')[0];
 }
 
@@ -215,7 +221,7 @@ class FunctionBuilder extends _Builder {
     final inputId = step.inputId;
     final functionDecls = await listDecl(step, inputId);
 
-    final typedefsInputId = await step.findAssets(new Glob('**tjson')).first;
+    final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
     final typedefDecls = await listDecl(step, typedefsInputId);
 
     var functionFromTypedefs = typedefDecls.where(
@@ -240,7 +246,7 @@ class TypedefBuilder extends _Builder {
     final inputId = step.inputId;
     final typedefDecls = await listDecl(step, inputId);
 
-    final functionInputId = await step.findAssets(new Glob('**fjson')).first;
+    final functionInputId = await step.findAssets(new Glob('**.fjson')).first;
     final functionDecls = await listDecl(step, functionInputId);
 
     // TODO dedup
@@ -265,15 +271,44 @@ class StructBuilder extends _Builder {
   @override
   Future<void> build(BuildStep step) async {
     final inputId = step.inputId;
-    final decls = await listDecl(step, inputId);
+    final structDecls = await listDecl(step, inputId);
 
-    final typedefsInputId = await step.findAssets(new Glob('**tjson')).first;
+    final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
     final typedefDecls = await listDecl(step, typedefsInputId);
 
     final typedefMap = <String, Decl>{};
     typedefDecls.forEach((t) => typedefMap[t.name] = t);
 
     await step.writeAsString(inputId.changeExtension(output),
-        declareStructs(inputId.root, decls, typedefMap, log));
+        declareStructs(inputId.root, structDecls, typedefMap, log));
   }
 }
+
+class ExtensionBuilder with DeclUtil implements Builder{
+
+  static const output = '.x.dart';
+
+  @override
+  final buildExtensions = {
+    '''.layout''': [ output ]
+  };
+
+  @override
+  Future<void> build(BuildStep step) async {
+    final inputId = step.inputId;
+    final recordLayouts = await step.readAsString(inputId);
+
+    final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
+    final typedefDecls = await listDecl(step, typedefsInputId);
+
+    final typedefMap = <String, Decl>{};
+    typedefDecls.forEach((t) => typedefMap[t.name] = t);
+
+    final structsInputId = await step.findAssets(new Glob('**.sjson')).first;
+    final structDecls = await listDecl(step, structsInputId);
+
+    await step.writeAsString(inputId.changeExtension(output),
+        declareExtensions(inputId.root, recordLayouts, structDecls, typedefMap, log));
+  }
+}
+

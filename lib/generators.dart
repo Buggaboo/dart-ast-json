@@ -7,7 +7,8 @@ import 'package:dart_ast_json/src/builders.dart';
 Builder resolver(BuilderOptions options) => ASTResolver();
 
 // the nice bits
-Builder enumBuilder(BuilderOptions options)     => EnumBuilder();
-Builder typedefBuilder(BuilderOptions options)  => TypedefBuilder();
-Builder functionBuilder(BuilderOptions options) => FunctionBuilder();
-Builder structBuilder(BuilderOptions options)   => StructBuilder();
+Builder enumBuilder(BuilderOptions options)      => EnumBuilder();
+Builder typedefBuilder(BuilderOptions options)   => TypedefBuilder();
+Builder functionBuilder(BuilderOptions options)  => FunctionBuilder();
+Builder structBuilder(BuilderOptions options)    => StructBuilder();
+Builder extensionBuilder(BuilderOptions options) => ExtensionBuilder();
