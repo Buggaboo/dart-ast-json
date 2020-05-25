@@ -16,6 +16,22 @@ String opCodeWithInteger(Decl e, int i) {
   return " = ${literal.opcode ?? ""}${literal.value ?? i}";
 }
 
+String disabledEnumLayout(String classDef) =>
+'''
+/*
+$classDef
+*/
+''';
+
+String declareClassLayout(Decl e, String fields) =>
+'''
+// ${e.id}
+class ${e.name} {
+  $fields
+}
+''';
+
+
 String enumToClass (Decl e, [Logger log]) {
   if (e.inner == null) return "";
 
@@ -35,27 +51,15 @@ String enumToClass (Decl e, [Logger log]) {
 
   // ComplexOperator? CompoundOperator???
   var addWarning = (Decl d) => d.find("BinaryOperator") == null ?
-    "" : " /* TODO check actual value ${d.id} */";
+    "" : " // TODO check actual value ${d.id} "; // TODO translate the operator?
 
   final fields = constants.map((c) =>
-    '  static const int ${c.name}${opCodeWithInteger(c, i++)};${addWarning(c)}')
+    'static const int ${c.name}${opCodeWithInteger(c, i++)};${addWarning(c)}')
     .toList().join("\n  ");
 
-  final classDef =
-  '''
-  /* ${e.id} */
-  class ${e.name} {
-  $fields
-  }
-  
-  ''';
+  final classDef = declareClassLayout(e, fields);
 
-  return disable ?
-    '''
-    /*
-    $classDef
-    */
-    ''' : classDef;
+  return disable ? disabledEnumLayout(classDef) : classDef;
 }
 
 String desugar(Type origType, Map<String, Decl> typedefs) {
@@ -230,13 +234,13 @@ String signatures(List<Decl> funs, List<Decl> typedefs, Logger log) =>
     .toList().join('\n\n');
 
 // Add when necessary to see the typedefs
-String functionBinding(List<Decl> funs, List<Decl> typedefs, Logger log) =>
+String functionBinding(String importRoot, List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 import "dart:ffi";
 import "dart:io" show Platform;
 import 'package:ffi/ffi.dart';
-import "<TODO typedefs>.dart";
-import "<TODO structs>.dart";
+import "$importRoot.t.dart";
+import "$importRoot.s.dart";
 
 // ignore_for_file: camel_case_types
 // ignore_for_file: non_constant_identifier_names
@@ -261,10 +265,10 @@ String declareCommentedTypedefs(funs, typedefs, log) => funs.map((f) => funPrep(
     Map.fromIterable(typedefs, key: (t) => t.name, value: (t) => t), log, funStringsTds))
     .toList().join('\n');
 
-String declareTypedefs(List<Decl> funs, List<Decl> typedefs, Logger log) =>
+String declareTypedefs(String importRoot, List<Decl> funs, List<Decl> typedefs, Logger log) =>
 '''
 import "dart:ffi";
-import '<TODO struct>.s.dart';
+import '$importRoot.s.dart';
 import 'package:ffi/ffi.dart';
 
 // ignore_for_file: camel_case_types
@@ -312,13 +316,15 @@ $fields
 
 /// Note: IntPtr seems to be the the correct representation for size_t:
 /// "Represents a native pointer-sized integer in C."
-String declareStructs(List<Decl> recordDecls, Map<String, Decl> typedefs, Logger log) =>
+String declareStructs(String importRoot, List<Decl> recordDecls, Map<String, Decl> typedefs, Logger log) =>
 '''
 import 'dart:ffi';
 import "dart:typed_data";
 import "package:ffi/ffi.dart";
+import '$importRoot.t.dart';
 
 // ignore_for_file: camel_case_types
+// ignore_for_file: non_constant_identifier_names
 
 ${recordDecls.map((r) => declareStruct(r, typedefs, log)).toList().join("\n")}
 ''';

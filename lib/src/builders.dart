@@ -186,6 +186,10 @@ abstract class _Builder implements Builder {
 
 }
 
+extension _AssetId on AssetId {
+  get root => this.pathSegments[1].split('.')[0];
+}
+
 class EnumBuilder extends _Builder {
 
   const EnumBuilder(): super(Infix.e);
@@ -222,7 +226,7 @@ class FunctionBuilder extends _Builder {
             .map((d) => Decl.fromTypedefDecl2FunctionDecl(d)).toList();
 
     await step.writeAsString(inputId.changeExtension(output),
-        functionBinding(functionFromTypedefs + functionDecls, typedefDecls, log));
+        functionBinding(inputId.root, functionFromTypedefs + functionDecls, typedefDecls, log));
 
   }
 }
@@ -248,7 +252,7 @@ class TypedefBuilder extends _Builder {
         .map((d) => Decl.fromTypedefDecl2FunctionDecl(d)).toList();
 
     await step.writeAsString(inputId.changeExtension(output),
-        declareTypedefs(functionFromTypedefs + functionDecls, typedefDecls, log));
+        declareTypedefs(inputId.root, functionFromTypedefs + functionDecls, typedefDecls, log));
 
   }
 }
@@ -270,6 +274,6 @@ class StructBuilder extends _Builder {
     typedefDecls.forEach((t) => typedefMap[t.name] = t);
 
     await step.writeAsString(inputId.changeExtension(output),
-        declareStructs(decls, typedefMap, log));
+        declareStructs(inputId.root, decls, typedefMap, log));
   }
 }
