@@ -68,6 +68,7 @@ String desugar(Type origType, Map<String, Decl> typedefs) {
 
   if (td == null) { return origType.qualType; }
 
+  // TODO confirm this
   // enum <name> -> int
   if (origType.isEnum) {
     return td.type.qualType;
@@ -291,9 +292,38 @@ String declareField(Decl field, Map<String, Decl> typedefs, Logger log) {
 
   final td = typedefs[field.type.qualType];
   final type = td?.type?.qualType ?? '';
+  final generatedType = declareFieldType(field, typedefs, log);
+
+  bool disable = true;
+  if (generatedType.startsWith('@')) {
+    disable = false;
+  }
+
+  // allow multiple pointers
+  if (generatedType.contains('Pointer')) {
+    if (generatedType.contains('Void')) {
+      disable = false;
+    }
+    if (generatedType.contains('NativeFunction')) {
+      disable = false;
+    }
+    if (generatedType.contains('Float') || generatedType.contains('Double')) {
+      disable = false;
+    }
+    if (generatedType.contains('Uint') || generatedType.contains('Int')) {
+      for (var t in ['8', '16', '32', '64']) {
+        if (generatedType.contains(t)) {
+          disable = false;
+          break;
+        }
+      }
+    }
+  }
 
   return '  // ${field.id} ${type}'
-      '\n  ${declareFieldType(field, typedefs, log)} ${field.name};';
+      '\n  ${disable ? '// ' : ''}${generatedType} ${field.name};';
+
+
 }
 
 String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
