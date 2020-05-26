@@ -320,27 +320,40 @@ String declareField(Decl field, Map<String, Decl> typedefs, Logger log) {
     }
   }
 
-  return '  // ${field.id} ${type}'
+  return '// ${field.id} ${type}'
       '\n  ${disable ? '// ' : ''}${generatedType} ${field.name};';
-
-
 }
 
 String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
   final fieldsDecl = <Decl>[];
   decl.gather('FieldDecl', fieldsDecl, cutOff: ['CompoundStmt']);
 
-  final fields = fieldsDecl.map((f) => declareField(f, typedefs, log))
-      .toList().join("\n");
+  final fields = fieldsDecl.map((f) => declareField(f, typedefs, log)).toList();
 
-  return declareStructClass(decl, fields);
+  for (int i=0; i<fields.length; i++) {
+    if (fields[i].lastIndexOf('//') > 0) {
+      fields.insert(i, '/*');
+      fields.add('*/');
+      break;
+    }
+  }
+
+  return declareStructClass(decl, fields.join('\n  '));
 }
 
 String declareStructClass(Decl decl, String fields) =>
+decl?.tagUsed != 'union' ?
 '''
 // ${decl.id}
-class ${decl.name} extends Struct ${ decl?.tagUsed == 'union' ? '/* union */ ' : ''}{
-$fields
+class ${decl.name} extends Struct {
+  $fields
+}
+'''
+:
+'''
+// ${decl.id} union
+class ${decl.name} extends Struct {
+  Pointer<Void> offset;
 }
 ''';
 
