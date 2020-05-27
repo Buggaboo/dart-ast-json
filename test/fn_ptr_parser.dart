@@ -1,6 +1,8 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/serializers.dart';
-import 'package:dart_ast_json/src/parser.dart';
+import 'package:dart_ast_json/src/fn_ptr_extractor.dart';
+
+// TODO do this in a proper grammer with
 
 final testNestedFunPtrs = {
   'fpa' : "int (*)(int *, int *, void *(*)(void *), void *)",

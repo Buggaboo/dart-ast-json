@@ -4,7 +4,7 @@ import 'package:glob/glob.dart';
 
 import 'package:dart_ast_json/src/code_generators.dart';
 import 'package:dart_ast_json/src/serializers.dart';
-import 'parser.dart';
+import 'fn_ptr_extractor.dart';
 
 final jsonDecoder = JsonDecoder();
 final jsonEncoder = JsonEncoder();

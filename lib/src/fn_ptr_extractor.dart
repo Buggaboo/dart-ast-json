@@ -1,5 +1,4 @@
 import 'serializers.dart';
-import 'package:petitparser/petitparser.dart';
 
 // ignore_for_file: camel_case_types
 
