@@ -324,12 +324,18 @@ String declareField(Decl field, Map<String, Decl> typedefs, Logger log) {
       '\n  ${disable ? '// ' : ''}${generatedType} ${field.name};';
 }
 
-String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
+String declareStructMembers(Decl decl, Map<String, Decl> typedefs, Logger log) {
+
+  if (decl?.tagUsed == 'union') {
+    return 'Pointer<Void> offset;';
+  }
+
   final fieldsDecl = <Decl>[];
   decl.gather('FieldDecl', fieldsDecl, cutOff: ['CompoundStmt']);
 
   final fields = fieldsDecl.map((f) => declareField(f, typedefs, log)).toList();
 
+  // disable fields
   for (int i=0; i<fields.length; i++) {
     if (fields[i].lastIndexOf('//') > 0) {
       fields.insert(i, '/*');
@@ -342,18 +348,10 @@ String declareStruct(Decl decl, Map<String, Decl> typedefs, Logger log) {
 }
 
 String declareStructClass(Decl decl, String fields) =>
-decl?.tagUsed != 'union' ?
 '''
-// ${decl.id}
+// ${decl.id} ${decl?.tagUsed == 'union' ? 'union' : ''}
 class ${decl.name} extends Struct {
   $fields
-}
-'''
-:
-'''
-// ${decl.id} union
-class ${decl.name} extends Struct {
-  Pointer<Void> offset;
 }
 ''';
 
@@ -369,7 +367,7 @@ import '$importRoot.t.dart';
 // ignore_for_file: camel_case_types
 // ignore_for_file: non_constant_identifier_names
 
-${recordDecls.map((r) => declareStruct(r, typedefMap, log)).toList().join("\n")}
+${recordDecls.map((r) => declareStructMembers(r, typedefMap, log)).toList().join("\n")}
 ''';
 
 
