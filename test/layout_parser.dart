@@ -4,15 +4,18 @@ import 'package:petitparser/petitparser.dart';
 
 void main() {
 
+
   test("basics", () {
-    expect(basicType.accept('*'), false);
-    expect(basicType.accept('1'), false);
-    expect(basicType.accept('__uint64__'), true);
-    expect(basicType.accept('int'), true);
-    expect(basicType.accept('int64'), true);
+    final bt = AstRecordLayoutPatterns.basicType;
+    expect(bt.accept('*'), false);
+    expect(bt.accept('1'), false);
+    expect(bt.accept('__uint64__'), true);
+    expect(bt.accept('int'), true);
+    expect(bt.accept('int64'), true);
   });
 
   test("basics pointers", () {
+    final type = AstRecordLayoutPatterns.type;
     expect(type.accept('int *'), true);
     expect(type.accept('int **'), true);
     expect(type.accept('int ***'), true);
@@ -22,6 +25,7 @@ void main() {
   });
 
   test("basics array", () {
+    final array = AstRecordLayoutPatterns.array;
     expect(array.accept('[1]'), true);
     expect(array.accept('[12341234]'), true);
     expect(array.accept('[0000]'), true); // let's assume LLVM is programmed correctly
@@ -31,6 +35,7 @@ void main() {
 
 
   test("basics pointer + array", () {
+    final type = AstRecordLayoutPatterns.type;
     expect(type.accept('int *[1]'), true);
     expect(type.accept('int **[12341234]'), true);
     expect(type.accept('const int ***[1]'), true);
@@ -41,6 +46,7 @@ void main() {
   });
 
   test("basics function pointers", () {
+    final fnPtr = AstRecordLayoutPatterns.fnPtr;
     expect(fnPtr.accept('int *(*)(void)'), true);
     expect(fnPtr.accept('int *(*)(void ***)'), true);
     expect(fnPtr.accept('int **(*)(void **)'), true);
@@ -73,9 +79,9 @@ void main() {
              '| [sizeof=160, align=8]'; // 12
 
   final splitLines = AST_RECORD_LAYOUT1.split('\n');
-  final p = AstRecordLayoutPatterns.i;
 
   test("verify patterns match", () {
+    final p = AstRecordLayoutPatterns.i;
 
     // first line
     expect(AstRecordLayoutPatterns.first.accept(splitLines[0]), true);
@@ -120,6 +126,8 @@ void main() {
   ];
 
   test("read offsets, get names from first degree fields", () {
+    final p = AstRecordLayoutPatterns.i;
+
     for (var l in trickyLines) {
       final r = p.parse(l);
       expect(r.map((v) => v[0]).value, l.substring(0, l.indexOf('|')-1));
