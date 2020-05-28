@@ -4,9 +4,8 @@ import 'package:petitparser/petitparser.dart';
 
 void main() {
 
-
   test("basics", () {
-    final bt = AstRecordLayoutPatterns.basicType;
+    final bt = basicType;
     expect(bt.accept('*'), false);
     expect(bt.accept('1'), false);
     expect(bt.accept('__uint64__'), true);
@@ -15,7 +14,6 @@ void main() {
   });
 
   test("basics pointers", () {
-    final type = AstRecordLayoutPatterns.type;
     expect(type.accept('int *'), true);
     expect(type.accept('int **'), true);
     expect(type.accept('int ***'), true);
@@ -25,7 +23,6 @@ void main() {
   });
 
   test("basics array", () {
-    final array = AstRecordLayoutPatterns.array;
     expect(array.accept('[1]'), true);
     expect(array.accept('[12341234]'), true);
     expect(array.accept('[0000]'), true); // let's assume LLVM is programmed correctly
@@ -35,7 +32,6 @@ void main() {
 
 
   test("basics pointer + array", () {
-    final type = AstRecordLayoutPatterns.type;
     expect(type.accept('int *[1]'), true);
     expect(type.accept('int **[12341234]'), true);
     expect(type.accept('const int ***[1]'), true);
@@ -46,7 +42,6 @@ void main() {
   });
 
   test("basics function pointers", () {
-    final fnPtr = AstRecordLayoutPatterns.fnPtr;
     expect(fnPtr.accept('int *(*)(void)'), true);
     expect(fnPtr.accept('int *(*)(void ***)'), true);
     expect(fnPtr.accept('int **(*)(void **)'), true);
