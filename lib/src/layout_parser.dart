@@ -67,12 +67,15 @@ class IRgenRecordLayoutPatterns {
         (startApost & nonOfApostPlus & middleApost & nonOfApostPlus & endApost).pick(3) |
         (startApost & nonOfApostPlus & endApost).pick(1)
       );
+}
 
+class CGRecordLayoutPatterns {
   // we don't use these types due to info loss
   // also bitfields can be derived from the AST Record
   static final recordType = string('%struct.') | string('%union.');
-  static final LLVMType = string('LLVMType:') & recordType & wordPlusFlatten &
-    (string(' = type { ') & any().plus() & string(' }')).flatten();
+  static final LLVMTypePattern = string('  LLVMType:') & recordType & wordPlusFlatten &
+  (char('.') & digit().plus()).optional() &
+  (string(' = type { ') & noneOf('}').plus().flatten().trim() & string('}')).pick(1);
 
   static final last = string(']>');
 }

@@ -110,13 +110,55 @@ final trickyIrgenFields =
 |-FieldDecl 0x7fb20780dc58 <<invalid sloc>> <invalid sloc> fp_offset 'unsigned int'
 |-FieldDecl 0x7fb20780dca8 <<invalid sloc>> <invalid sloc> overflow_arg_area 'void *'""";
 
+final LLVMTypes =
+"""
+  LLVMType:%struct.Floor1 = type { i8, [32 x i8], [16 x i8], [16 x i8], [16 x i8], [16 x [8 x i16]], [250 x i16], [250 x i8], [250 x [2 x i8]], i8, i8, i32 }
+  LLVMType:%union.Floor = type { %struct.Floor1 }
+  LLVMType:%struct.Residue = type { i32, i32, i32, i8, i8, i8**, [8 x i16]* }
+  LLVMType:%struct.MappingChannel = type { i8, i8, i8 }
+  LLVMType:%struct.Mapping = type { i16, %struct.MappingChannel*, i8, [15 x i8], [15 x i8] }
+  LLVMType:%struct.Mode = type { i8, i8, i16, i16 }
+  LLVMType:%struct.CRCscan = type { i32, i32, i32, i32, i32 }
+  LLVMType:%struct.stb_vorbis = type { i32, i32, i32, i32, i32, i8*, i32, i8**, %struct.__sFILE*, i32, i32, i8*, i8*, i8*, i32, i8, i32, %struct.ProbedPage, %struct.ProbedPage, %struct.stb_vorbis_alloc, i32, i32, i32, i32, [2 x i32], i32, i32, i32, %struct.Codebook*, i32, [64 x i16], %union.Floor*, i32, [64 x i16], %struct.Residue*, i32, %struct.Mapping*, i32, [64 x %struct.Mode], i32, [16 x float*], [16 x float*], [16 x float*], i32, [16 x i16*], i32, i32, [2 x float*], [2 x float*], [2 x float*], [2 x float*], [2 x i16*], i32, i32, i32, [255 x i8], i8, i8, i8, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, [4 x %struct.CRCscan], i32, i32 }
+  LLVMType:%struct.stb_vorbis_info = type { i32, i32, i32, i32, i32, i32 }
+  LLVMType:%struct.stb_vorbis_comment = type { i8*, i32, i8** }
+  LLVMType:%struct.drflac_init_info = type { i64 (i8*, i8*, i64)*, i32 (i8*, i32, i32)*, void (i8*, %struct.drflac_metadata*)*, i32, i8*, i8*, i32, i8, i8, i64, i16, i64, i32, i32, %struct.drflac_bs, %struct.drflac_frame_header }
+  LLVMType:%struct.__loadu_si128 = type { <2 x i64> }
+  LLVMType:%struct.__storeu_si128 = type { <2 x i64> }
+  LLVMType:%struct.__storeu_ps = type { <4 x float> }
+  LLVMType:%struct.__mm_storeh_pi_struct = type { <2 x float> }
+  LLVMType:%struct.drmp3_L12_subband_alloc = type { i8, i8, i8 }
+  LLVMType:%struct.__loadu_ps = type { <4 x float> }
+  LLVMType:%union.anon.61 = type { i64 }
+  LLVMType:%union.anon.62 = type { i32 }
+  LLVMType:%struct._opaque_pthread_mutexattr_t = type { i64, [8 x i8] }
+  LLVMType:%struct._opaque_pthread_condattr_t = type { i64, [8 x i8] }
+  LLVMType:%struct._opaque_pthread_attr_t = type { i64, [56 x i8] }
+  LLVMType:%struct.sched_param = type { i32, [4 x i8] }
+  LLVMType:%struct.AudioComponentDescription = type { i32, i32, i32, i32, i32 }
+  LLVMType:%struct.AudioObjectPropertyAddress = type { i32, i32, i32 }
+  LLVMType:%struct.AudioBuffer = type { i32, i32, i8* }
+  LLVMType:%struct.AudioBufferList = type { i32, [1 x %struct.AudioBuffer] }
+  LLVMType:%struct.AudioStreamBasicDescription = type { double, i32, i32, i32, i32, i32, i32, i32, i32 }
+  LLVMType:%struct.AudioValueRange = type { double, double }
+  LLVMType:%struct.AudioStreamRangedDescription = type { %struct.AudioStreamBasicDescription, %struct.AudioValueRange }""";
+
 void main() {
 
   test("verify patterns match", () {
     final first = IRgenRecordLayoutPatterns.first;
-    final last = IRgenRecordLayoutPatterns.last;
     final second = IRgenRecordLayoutPatterns.second;
     final fieldPattern = IRgenRecordLayoutPatterns.fieldPattern;
+    final last = CGRecordLayoutPatterns.last;
+
+    final recordType = CGRecordLayoutPatterns.recordType;
+    final LLVMTypePattern = CGRecordLayoutPatterns.LLVMTypePattern;
+    final LLVMTypes0 = LLVMTypes.split('\n');
+    for (int i=0; i<LLVMTypes0.length; i++) {
+      if (!LLVMTypePattern.accept(LLVMTypes0[i])) {
+        fail("Failed on line $i: ${LLVMTypes0[i]}");
+      }
+    }
 
     expect(fieldPattern.accept("|-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 referenced id 'int'"), true);
     expect(fieldPattern.accept("|-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 varName 'uint64':'unsigned int'"), true);
