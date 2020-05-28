@@ -26,15 +26,21 @@ string('(*)(') & type & (string(', ') & type).star() & char(')')).flatten();
 
 class AstRecordLayoutPatterns {
   static final first = string('*** Dumping AST Record Layout');
-  static final second = (string('0 | ') & wordPlusFlatten).pick(1); // TODO test on nested type
-  static final prefix = digitPlusFlatten & string(' |   ');
-  static final varName = wordPlusFlatten;
-  static final fieldPattern = prefix &
-    (((fnPtr & space & varName)..pick(2))
-        .or((type & space & varName)..pick(2))
-        .or((basicType & space & varName).pick(2)));
-  static final bitFields = digitPlusFlatten & char(':') & digitPlus & char('-') & digitPlus &
-    string(' |   ') & (basicType & space & varName).pick(2); // TODO at least give a warning
+  static final recordName = (string('struct ') | string('union ')) &
+    wordPlusFlatten & (string('::(anonymous at ') & noneOf(":").plus().flatten() &
+    char(':') & digitPlusFlatten & char(':') & digitPlusFlatten & char(')'));
+
+  static final second = string('0 | ') & (recordName | wordPlusFlatten); // TODO test on nested type
+  static final prefix = (((digitPlusFlatten & char(':') & digitPlusFlatten & char('-') & digitPlusFlatten) | digitPlusFlatten) & string(' |   ')).pick(0);
+
+  static final fieldPattern = prefix & (word().plus() & any().plus()).flatten();
+
+/// Too complicated, you just want the last word
+//  static final fieldPattern = prefix &
+//    (((fnPtr & space & wordPlusFlatten)..pick(2))
+//        .or((type & space & wordPlusFlatten)..pick(2))
+//        .or((basicType & space & wordPlusFlatten).pick(2)));
+
   static final last = string('| [sizeof=') & digitPlusFlatten & string(', align=') & digitPlusFlatten & char(']');
 }
 
@@ -89,7 +95,7 @@ class Field {
 
   // known from IRgen
   String declId;
-  String typedefType, type;
+  String type, desugaredType;
 }
 
 enum RecordType {
@@ -98,17 +104,20 @@ enum RecordType {
 
 class Record {
 
-  final String identifier; // use md5(filename:line:column) as identifier
+  final String identifier;
   final bool isAnon;
-  final List<Field> fields;
+  final fields = <Field>{};
 
-  Record(this.identifier, this.fields, [this.isAnon = false]);
+  Record(this.identifier, [this.isAnon = false]);
 
   // known from IRgen
+  // this can be used for debugging, when considering
+  // generating a new class (e.g. project_arch_os.s.dart) // TODO
   String declId;
 
   // known from CG
   String generatedName; // e.g. struct_anon_23, union_anon_20, ma_channel_converter
   RecordType type;// if anon the type is declared on the 2nd line, otherwise no.
-  // although offset 0 for all fields, is a strong clue
+  // although offset 0 for all fields, is a strong clue // TODO
+
 }

@@ -2,6 +2,69 @@ import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart';
 
+final firstField =
+"""
+         0 | drflac_vorbis_comment_iterator
+         0 | drflac_cuesheet_track_iterator
+         0 | drflac_cuesheet_track
+         0 | drmp3dec
+         0 | drmp3_L3_gr_info
+         0 | drmp3_bs
+         0 | drmp3dec_scratch
+         0 | drmp3_L12_scale_info
+         0 | drmp3dec_frame_info
+         0 | drmp3_allocation_callbacks
+         0 | struct drmp3::(anonymous at /pyminiaudio/miniaudio/dr_mp3.h:358:5)
+         0 | drmp3
+         0 | drmp3_seek_point
+         0 | drmp3__seeking_mp3_frame_info
+         0 | drmp3_config
+         0 | union (anonymous at /pyminiaudio/miniaudio/dr_wav.h:296:5)
+         0 | drwav_smpl_loop
+         0 | union (anonymous at /pyminiaudio/miniaudio/dr_wav.h:1256:5)
+         0 | union (anonymous at /pyminiaudio/miniaudio/dr_wav.h:1277:5)
+         0 | drwav_chunk_header
+         0 | drwav_fmt
+         0 | drwav_allocation_callbacks
+         0 | drwav_smpl
+         0 | drwav__memory_stream
+         0 | drwav__memory_stream_write
+         0 | struct drwav::(anonymous at /pyminiaudio/miniaudio/dr_wav.h:553:5)
+         0 | struct drwav::(anonymous at /pyminiaudio/miniaudio/dr_wav.h:559:5)
+         0 | struct drwav::(anonymous at /pyminiaudio/miniaudio/dr_wav.h:570:5)
+         0 | drwav
+         0 | drwav_data_format
+         0 | struct flock
+         0 | ma_biquad_coefficient
+         0 | ma_biquad
+         0 | ma_lpf1
+         0 | ma_lpf2
+         0 | ma_hpf1
+         0 | ma_hpf2
+         0 | ma_bpf2
+         0 | ma_linear_resampler_config
+         0 | union ma_linear_resampler::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2273:5)
+         0 | union ma_linear_resampler::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2278:5)
+         0 | ma_lpf
+         0 | ma_linear_resampler
+         0 | struct ma_resampler_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2309:5)
+         0 | struct ma_resampler_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2314:5)
+         0 | ma_resampler_config
+         0 | struct ma_data_converter_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2476:9)
+         0 | struct ma_data_converter_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2481:9)
+         0 | struct ma_data_converter_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2472:5)
+         0 | ma_data_converter_config
+         0 | ma_allocation_callbacks
+         0 | ma_rb
+         0 | struct (anonymous at /pyminiaudio/miniaudio/miniaudio.h:2899:9)
+         0 | struct _opaque_pthread_mutex_t
+         0 | struct (anonymous at /pyminiaudio/miniaudio/miniaudio.h:2921:9)
+         0 | struct _opaque_pthread_cond_t
+         0 | struct (anonymous at /pyminiaudio/miniaudio/miniaudio.h:2943:9)
+         0 | struct (anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)
+         0 | ma_device_id
+         0 | struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3485:9)""";
+
 void main() {
 
   test("basics", () {
@@ -125,17 +188,17 @@ void main() {
 
     for (var l in trickyLines) {
       final r = p.parse(l);
-      expect(r.map((v) => v[0]).value, l.substring(0, l.indexOf('|')-1));
-      expect(r.map((v) => v[2][v[2].length - 1]).value, l.substring(l.lastIndexOf(' ')+1));
+      expect(r.value[0], l.substring(0, l.indexOf('|')-1));
+      expect(r.map((v) {
+        final vv = v[1].split(' ');
+        return vv[vv.length-1];
+      }).value, l.substring(l.lastIndexOf(' ')+1));
     }
-
-    // When implementing, check for 'is List<dynamic>' before calling length
-    final r = p.parse('24 |   drflac_uint32 pcmFramesRemaining');
-    expect (r.map((v) => '${v[0]} ${v[2]}').value, '24 pcmFramesRemaining');
   });
 
   test("read struct/union name", () {
-    final v = AstRecordLayoutPatterns.second.parse('0 | drflac_frame').value;
+    final v = AstRecordLayoutPatterns.second.parse('0 | drflac_frame')
+        .map((v) => v[1]).value;
     expect(v, 'drflac_frame');
   });
 
@@ -144,5 +207,14 @@ void main() {
         .map((v) => '${v[1]} ${v[3]}')
         .value;
     expect(r, '160 8');
+  });
+
+  test("first degree field", () {
+    final firstField0 = firstField.split('\n');
+    for (int i=0; i<firstField0.length; i++) {
+      if (!AstRecordLayoutPatterns.second.accept(firstField0[i].trim())) {
+        fail('Failed at line $i, with:\n"${firstField0[i]}"');
+      }
+    }
   });
 }

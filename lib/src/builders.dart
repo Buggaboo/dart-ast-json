@@ -1,10 +1,12 @@
-import 'package:build/build.dart';
+import 'dart:io';
 import 'dart:convert' show JsonDecoder, JsonEncoder;
+import 'package:build/build.dart';
 import 'package:glob/glob.dart';
 
 import 'package:dart_ast_json/src/code_generators.dart';
 import 'package:dart_ast_json/src/serializers.dart';
 import 'fn_ptr_extractor.dart';
+import 'layout_parser.dart';
 
 final jsonDecoder = JsonDecoder();
 final jsonEncoder = JsonEncoder();
@@ -172,7 +174,7 @@ mixin DeclUtil {
 
 }
 
-abstract class _Builder with DeclUtil implements Builder{
+abstract class _Builder with DeclUtil implements Builder {
 
   final Infix infix;
 
@@ -284,7 +286,7 @@ class StructBuilder extends _Builder {
   }
 }
 
-class ExtensionBuilder with DeclUtil implements Builder{
+class ExtensionBuilder with DeclUtil implements Builder {
 
   static const output = '.x.dart';
 
@@ -296,7 +298,12 @@ class ExtensionBuilder with DeclUtil implements Builder{
   @override
   Future<void> build(BuildStep step) async {
     final inputId = step.inputId;
-    final recordLayouts = await step.readAsString(inputId);
+
+    final records = <Record>[];
+    // FIXME: Unsupported operation: Cannot extract a file path from a asset URI
+    for (var l in await File.fromUri(inputId.uri).readAsLines()) {
+      if (l.isEmpty) { continue; }
+    }
 
     final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
     final typedefDecls = await listDecl(step, typedefsInputId);
@@ -308,7 +315,7 @@ class ExtensionBuilder with DeclUtil implements Builder{
     final structDecls = await listDecl(step, structsInputId);
 
     await step.writeAsString(inputId.changeExtension(output),
-        declareExtensions(inputId.root, recordLayouts, structDecls, typedefMap, log));
+        declareExtensions(inputId.root, records, structDecls, typedefMap, log));
   }
 }
 
