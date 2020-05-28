@@ -76,7 +76,7 @@ void main() {
   final splitLines = AST_RECORD_LAYOUT1.split('\n');
 
   test("verify patterns match", () {
-    final p = AstRecordLayoutPatterns.i;
+    final p = AstRecordLayoutPatterns.fieldPattern;
 
     // first line
     expect(AstRecordLayoutPatterns.first.accept(splitLines[0]), true);
@@ -121,7 +121,7 @@ void main() {
   ];
 
   test("read offsets, get names from first degree fields", () {
-    final p = AstRecordLayoutPatterns.i;
+    final p = AstRecordLayoutPatterns.fieldPattern;
 
     for (var l in trickyLines) {
       final r = p.parse(l);
