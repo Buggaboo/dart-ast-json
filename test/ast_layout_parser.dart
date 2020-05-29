@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart';
 
-final firstField =
+final recordIdentifier =
 """
          0 | drflac_vorbis_comment_iterator
          0 | drflac_cuesheet_track_iterator
@@ -197,23 +197,42 @@ void main() {
   });
 
   test("read struct/union name", () {
-    final v = AstRecordLayoutPatterns.second.parse('0 | drflac_frame')
-        .map((v) => v[1]).value;
+    final v = AstRecordLayoutPatterns.second.parse('0 | drflac_frame').value;
     expect(v, 'drflac_frame');
   });
 
   test("read sizeof, align", () {
     final r = AstRecordLayoutPatterns.last.parse('| [sizeof=160, align=8]')
-        .map((v) => '${v[1]} ${v[3]}')
+        .map((v) => '${v[0]} ${v[1]}')
         .value;
     expect(r, '160 8');
   });
 
-  test("first degree field", () {
-    final firstField0 = firstField.split('\n');
-    for (int i=0; i<firstField0.length; i++) {
-      if (!AstRecordLayoutPatterns.second.accept(firstField0[i].trim())) {
-        fail('Failed at line $i, with:\n"${firstField0[i]}"');
+  test("accept record identifiers", () {
+    final recordIds = recordIdentifier.split('\n');
+    for (int i=0; i<recordIds.length; i++) {
+      if (!AstRecordLayoutPatterns.second.accept(recordIds[i].trim())) {
+        fail('Failed at line $i, with:\n"${recordIds[i]}"');
+      }
+    }
+  });
+
+  test("extract identifiers for anonymous Record", () {
+    final recordIds = recordIdentifier.split('\n');
+    for (int i=0; i<recordIds.length; i++) {
+      final line = recordIds[i].trim();
+      final result = AstRecordLayoutPatterns.second
+          .parse(line).value;
+
+//      print ('"$result" result of "$line"');
+
+      if (line.contains("::(")) {
+        expect(result.length, 3);
+        continue;
+      }
+
+      if (line.contains(" (anon")) {
+        expect(result.length, 2);
       }
     }
   });

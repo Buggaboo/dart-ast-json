@@ -27,14 +27,14 @@ string('(*)(') & type & (string(', ') & type).star() & char(')')).flatten();
 
 class AstRecordLayoutPatterns {
   static final first = string('*** Dumping AST Record Layout');
-  static final recordName = (string('struct ') | string('union ')).trim() &
-    wordPlusFlatten &
-    ((string('::(anonymous at ') &
-      (noneOf(":").plus().flatten() & char(':') & digitPlusFlatten & char(':') &
-        digitPlusFlatten).flatten()
-        & char(')'))).pick(1);
+  static final structOrUnion = (string('struct ') | string('union ')).trim();
+  static final anonIdentifier = (noneOf(":").plus().flatten() & char(':') &
+    digitPlusFlatten & char(':') & digitPlusFlatten).flatten();
+  static final anon = structOrUnion & (string('(anonymous at ') & anonIdentifier & char(')')).pick(1);
+  static final anonAndNested = structOrUnion &
+    wordPlusFlatten & (string('::(anonymous at ') & anonIdentifier & char(')')).pick(1);
 
-  static final second = (string('0 | ') & (recordName | wordPlusFlatten)).pick(1);
+  static final second = (string('0 | ') & (anonAndNested | anon | wordPlusFlatten)).pick(1);
   static final prefix = (((digitPlusFlatten & char(':') & digitPlusFlatten & char('-') & digitPlusFlatten) | digitPlusFlatten) & string(' |   ')).pick(0);
 
   static final fieldPattern = prefix & (word().plus() & any().plus()).flatten();
@@ -115,8 +115,7 @@ class Record {
   final String identifier;
   final bool isAnon;
   final fields = <Field>{};
-
-  Record(this.identifier, [this.isAnon = false]);
+  final String parentIdentifier;
 
   // known from IRgen
   // this can be used for debugging, when considering
@@ -125,9 +124,35 @@ class Record {
 
   // known from CG
   String generatedName; // e.g. struct_anon_23, union_anon_20, ma_channel_converter
-  RecordType type;// if anon the type is declared on the 2nd line, otherwise no.
+  RecordType type;// if anon the type is declared on the 1st line in AST, otherwise no.
   // although offset 0 for all fields, is a strong clue // TODO
 
+
+  Record(this.identifier, [this.isAnon = false, this.parentIdentifier = null, this.type]);
+
+  static RecordType typeFromString(String s) {
+    return s == 'struct' ? RecordType.struct : RecordType.union;
+  }
+
+  factory Record.fromParserResult(dynamic result) {
+    if (result is String) {
+      return Record(result);
+    }
+
+    final rtype = typeFromString(result[0]);
+
+    if (result is List) {
+      if (result.length == 2) {
+        return Record(result[1], true, null, rtype);
+      }
+
+      if (result.length == 3) {
+        return Record(result[2], true, result[1], rtype);
+      }
+    }
+
+    throw Exception("Bad result from parser");
+  }
 }
 
 // poor person's state machine
