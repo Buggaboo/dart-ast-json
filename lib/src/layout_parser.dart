@@ -78,10 +78,15 @@ class IRgenRecordLayoutPatterns {
 class CGRecordLayoutPatterns {
   // we don't use these types due to info loss
   // also bitfields can be derived from the AST Record
+  static final first = string('Layout: <CGRecordLayout');
+
   static final recordType = string('%struct.') | string('%union.');
   static final LLVMTypePattern = string('LLVMType:') & recordType & wordPlusFlatten &
   (char('.') & digit().plus()).optional() &
   (string(' = type { ') & noneOf('}').plus().flatten().trim() & string('}')).pick(1);
+
+  static final penultimatelyIgnored = string("IsZeroInitializable:") |
+    string('BitFields:[') | string("<CGBitFieldInfo");
 
   static final last = string(']>');
 }

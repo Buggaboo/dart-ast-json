@@ -145,14 +145,14 @@ LLVMType:%struct.AudioStreamRangedDescription = type { %struct.AudioStreamBasicD
 
 void main() {
 
-  test("verify patterns match", () {
-    final first = IRgenRecordLayoutPatterns.first;
-    final second = IRgenRecordLayoutPatterns.second;
-    final fieldPattern = IRgenRecordLayoutPatterns.fieldPattern;
-    final last = CGRecordLayoutPatterns.last;
+  final first = IRgenRecordLayoutPatterns.first;
+  final second = IRgenRecordLayoutPatterns.second;
+  final fieldPattern = IRgenRecordLayoutPatterns.fieldPattern;
+  final last = CGRecordLayoutPatterns.last;
 
-    final recordType = CGRecordLayoutPatterns.recordType;
-    final LLVMTypePattern = CGRecordLayoutPatterns.LLVMTypePattern;
+  final LLVMTypePattern = CGRecordLayoutPatterns.LLVMTypePattern;
+
+  test("CG LLVM patterns", () {
     final LLVMTypes0 = LLVMTypes.split('\n');
     for (int i=0; i<LLVMTypes0.length; i++) {
       if (!LLVMTypePattern.accept(LLVMTypes0[i])) {
@@ -160,6 +160,28 @@ void main() {
       }
     }
 
+    // first line
+    expect(CGRecordLayoutPatterns.first.accept('Layout: <CGRecordLayout'), true);
+
+    // last line
+    expect(last.accept(']>'), true);
+  });
+
+  test("CG ignored lines", () {
+    final input =
+      '''
+      IsZeroInitializable:1
+        BitFields:[
+          <CGBitFieldInfo Offset:0 Size:1 IsSigned:0 StorageSize:8 StorageOffset:296>
+          <CGBitFieldInfo Offset:1 Size:1 IsSigned:0 StorageSize:8 StorageOffset:296>
+          <CGBitFieldInfo Offset:2 Size:1 IsSigned:0 StorageSize:8 StorageOffset:296>'''
+            .split('\n').map((s) => s.trim()).toList();
+    for (var l in input) {
+      expect(CGRecordLayoutPatterns.penultimatelyIgnored.accept(l), true);
+    }
+  });
+
+  test("verify IRgen Record patterns", () {
     expect(fieldPattern.accept("|-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 referenced id 'int'"), true);
     expect(fieldPattern.accept("|-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 varName 'uint64':'unsigned int'"), true);
     expect(fieldPattern.accept("`-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 referenced id 'volatile char'"), true);
@@ -180,9 +202,6 @@ void main() {
 
     // first line
     expect(first.accept('*** Dumping IRgen Record Layout'), true);
-
-    // last line
-    expect(last.accept(']>'), true);
 
     // 2nd line
     final firstParts = [
