@@ -17,20 +17,24 @@ final pointer = char('*');
 final array = (char('[') & digitPlus & char(']')).flatten();
 final basicType = (char('_').star() & letter() & word().star()).flatten();
 final type = (string('const ').optional() | string('volatile ')) & basicType &
-  (char(' ') & pointer.star().flatten() & array.star().flatten()).optional();
+  (space & pointer.star().flatten() & array.star().flatten()).optional();
 
-// let's hope we never bump into a fn ptr, with a fn ptr as an argument, TODO
+// TODO reimplement as: fnPtr = undefined(); fnPtr.set(...);
+// let's hope we never bump into a fn ptr, with a fn ptr as an argument
 // we have an extractor tho...
-final fnPtr = (basicType & (char(' ') & pointer.star()).flatten() &
+final fnPtr = (basicType & (space & pointer.star()).flatten() &
 string('(*)(') & type & (string(', ') & type).star() & char(')')).flatten();
 
 class AstRecordLayoutPatterns {
   static final first = string('*** Dumping AST Record Layout');
-  static final recordName = (string('struct ') | string('union ')) &
-    wordPlusFlatten & (string('::(anonymous at ') & noneOf(":").plus().flatten() &
-    char(':') & digitPlusFlatten & char(':') & digitPlusFlatten & char(')'));
+  static final recordName = (string('struct ') | string('union ')).trim() &
+    wordPlusFlatten &
+    ((string('::(anonymous at ') &
+      (noneOf(":").plus().flatten() & char(':') & digitPlusFlatten & char(':') &
+        digitPlusFlatten).flatten()
+        & char(')'))).pick(1);
 
-  static final second = string('0 | ') & (recordName | wordPlusFlatten);
+  static final second = (string('0 | ') & (recordName | wordPlusFlatten)).pick(1);
   static final prefix = (((digitPlusFlatten & char(':') & digitPlusFlatten & char('-') & digitPlusFlatten) | digitPlusFlatten) & string(' |   ')).pick(0);
 
   static final fieldPattern = prefix & (word().plus() & any().plus()).flatten();
@@ -41,13 +45,13 @@ class AstRecordLayoutPatterns {
 //        .or((type & space & wordPlusFlatten)..pick(2))
 //        .or((basicType & space & wordPlusFlatten).pick(2)));
 
-  static final last = string('| [sizeof=') & digitPlusFlatten & string(', align=') & digitPlusFlatten & char(']');
+  static final last = (string('| [sizeof=') & digitPlusFlatten).pick(1) & (string(', align=') & digitPlusFlatten & char(']')).pick(1);
 }
 
 class IRgenRecordLayoutPatterns {
   static final lineNumber = (string('line:') & digitPlus & char(':') & digitPlus).flatten();
   static final colNumber = (string('col:') & digitPlus).flatten();
-  static final definition = (string(' union ') | string(' struct ')) & (wordPlusFlatten & char(' ')).optional() & string('definition');
+  static final definition = (string(' union ') | string(' struct ')) & (wordPlusFlatten & space).optional() & string('definition');
   static final first = string('*** Dumping IRgen Record Layout');
   static final hexId = (string('0x') & word().plus()).flatten();
   static final second = string('Record: RecordDecl ') &
@@ -60,7 +64,6 @@ class IRgenRecordLayoutPatterns {
         (string(' union ') & wordPlusFlatten & string(' definition')).pick(1)
     );
 
-  static final fieldName = wordPlusFlatten;
   static final startApost = string(" '");
   static final middleApost = string("':'");
   static final endApost = char("'");
@@ -68,7 +71,7 @@ class IRgenRecordLayoutPatterns {
 
   static final fieldPattern = (string('`-') | string('|-')) & string('FieldDecl ') &
     hexId & (string(' <') & noneOf('>').plus() & string('> ') & colNumber).flatten() &
-    (string(' referenced ') | space) & fieldName &
+    (string(' referenced ') | space) & wordPlusFlatten &
     (
       (startApost & nonOfApostPlus & middleApost & nonOfApostPlus & endApost).pick(3) |
       (startApost & nonOfApostPlus & endApost).pick(1)
@@ -126,3 +129,20 @@ class Record {
   // although offset 0 for all fields, is a strong clue // TODO
 
 }
+
+// poor person's state machine
+final transitions = <Parser, List<Parser>>{
+  AstRecordLayoutPatterns.first : [ AstRecordLayoutPatterns.second ],
+  AstRecordLayoutPatterns.second : [ AstRecordLayoutPatterns.fieldPattern ],
+  // TODO do cheap check when ignoring fields
+  AstRecordLayoutPatterns.fieldPattern : [ AstRecordLayoutPatterns.fieldPattern, AstRecordLayoutPatterns.last ],
+  AstRecordLayoutPatterns.last : [ AstRecordLayoutPatterns.first, IRgenRecordLayoutPatterns.first ],
+  IRgenRecordLayoutPatterns.first : [ IRgenRecordLayoutPatterns.second ],
+  IRgenRecordLayoutPatterns.second : [ IRgenRecordLayoutPatterns.fieldPattern ],
+  // TODO do cheap check when ignoring fields
+  IRgenRecordLayoutPatterns.fieldPattern : [ IRgenRecordLayoutPatterns.fieldPattern, CGRecordLayoutPatterns.first ],
+  CGRecordLayoutPatterns.first : [ CGRecordLayoutPatterns.LLVMTypePattern ],
+  CGRecordLayoutPatterns.LLVMTypePattern : [ CGRecordLayoutPatterns.penultimatelyIgnored ],
+  CGRecordLayoutPatterns.penultimatelyIgnored : [ CGRecordLayoutPatterns.penultimatelyIgnored, CGRecordLayoutPatterns.last ],
+  CGRecordLayoutPatterns.last : [ AstRecordLayoutPatterns.first, IRgenRecordLayoutPatterns.first ]
+};
