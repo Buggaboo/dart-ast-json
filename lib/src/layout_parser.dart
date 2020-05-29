@@ -30,7 +30,7 @@ class AstRecordLayoutPatterns {
     wordPlusFlatten & (string('::(anonymous at ') & noneOf(":").plus().flatten() &
     char(':') & digitPlusFlatten & char(':') & digitPlusFlatten & char(')'));
 
-  static final second = string('0 | ') & (recordName | wordPlusFlatten); // TODO test on nested type
+  static final second = string('0 | ') & (recordName | wordPlusFlatten);
   static final prefix = (((digitPlusFlatten & char(':') & digitPlusFlatten & char('-') & digitPlusFlatten) | digitPlusFlatten) & string(' |   ')).pick(0);
 
   static final fieldPattern = prefix & (word().plus() & any().plus()).flatten();
@@ -51,14 +51,14 @@ class IRgenRecordLayoutPatterns {
   static final first = string('*** Dumping IRgen Record Layout');
   static final hexId = (string('0x') & word().plus()).flatten();
   static final second = string('Record: RecordDecl ') &
-  ((hexId & string(' prev ') & hexId) | hexId) &
-  string(' <') & noneOf(',').plus().flatten() & string(', ') & (lineNumber | colNumber) &
-  string('> ') & (lineNumber | colNumber) &
-  (
-      string(' struct definition') | string(' union definition') |
-      string(' struct ') & wordPlusFlatten & string(' definition') |
-      string(' union ') & wordPlusFlatten & string(' definition')
-  );
+    ((hexId & string(' prev ') & hexId) | hexId) &
+    string(' <') & noneOf(',').plus().flatten() & string(', ') & (lineNumber | colNumber) &
+    string('> ') & (lineNumber | colNumber) &
+    (
+        string(' struct definition') | string(' union definition') |
+        ((string(' struct ') & wordPlusFlatten & string(' definition')).pick(1)) |
+        (string(' union ') & wordPlusFlatten & string(' definition')).pick(1)
+    );
 
   static final fieldName = wordPlusFlatten;
   static final startApost = string(" '");
@@ -67,12 +67,12 @@ class IRgenRecordLayoutPatterns {
   static final nonOfApostPlus = noneOf("'").plus().flatten();
 
   static final fieldPattern = (string('`-') | string('|-')) & string('FieldDecl ') &
-      hexId & (string(' <') & noneOf('>').plus() & string('> ') & colNumber).flatten() &
-      (string(' referenced ') | space) & fieldName &
-      (
-        (startApost & nonOfApostPlus & middleApost & nonOfApostPlus & endApost).pick(3) |
-        (startApost & nonOfApostPlus & endApost).pick(1)
-      );
+    hexId & (string(' <') & noneOf('>').plus() & string('> ') & colNumber).flatten() &
+    (string(' referenced ') | space) & fieldName &
+    (
+      (startApost & nonOfApostPlus & middleApost & nonOfApostPlus & endApost).pick(3) |
+      (startApost & nonOfApostPlus & endApost).pick(1)
+    );
 }
 
 class CGRecordLayoutPatterns {
