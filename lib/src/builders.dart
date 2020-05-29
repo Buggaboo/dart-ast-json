@@ -300,9 +300,10 @@ class ExtensionBuilder with DeclUtil implements Builder {
     final inputId = step.inputId;
 
     final records = <Record>[];
-    // FIXME: Unsupported operation: Cannot extract a file path from a asset URI
-    for (var l in await File.fromUri(inputId.uri).readAsLines()) {
-      if (l.isEmpty) { continue; }
+    for (var rawLine in await File(inputId.path).readAsLines()) {
+      if (rawLine.isEmpty) { continue; }
+      final l = rawLine.trim;
+
     }
 
     final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
