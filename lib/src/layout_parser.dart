@@ -27,7 +27,7 @@ string('(*)(') & type & (string(', ') & type).star() & char(')')).flatten();
 
 class AstRecordLayoutPatterns {
   static final first = string('*** Dumping AST Record Layout');
-  static final structOrUnion = (string('struct ') | string('union ')).trim();
+  static final structOrUnion = ((string('struct') | string('union')) & space).pick(0);
   static final anonIdentifier = (noneOf(":").plus().flatten() & char(':') &
     digitPlusFlatten & char(':') & digitPlusFlatten).flatten();
   static final anon = structOrUnion & (string('(anonymous at ') & anonIdentifier & char(')')).pick(1);
@@ -35,9 +35,9 @@ class AstRecordLayoutPatterns {
     wordPlusFlatten & (string('::(anonymous at ') & anonIdentifier & char(')')).pick(1);
 
   static final second = (string('0 | ') & (anonAndNested | anon | wordPlusFlatten)).pick(1);
-  static final prefix = (((digitPlusFlatten & char(':') & digitPlusFlatten & char('-') & digitPlusFlatten) | digitPlusFlatten) & string(' |   ')).pick(0);
-
-  static final fieldPattern = prefix & (word().plus() & any().plus()).flatten();
+  static final offsetBitFieldRange = (digitPlusFlatten & char(':')).pick(0) & (digitPlusFlatten & char('-')).pick(0) & digitPlusFlatten;
+  static final offsets = offsetBitFieldRange | digitPlusFlatten;
+  static final fieldPattern = (offsets & string(' |   ')).pick(0) & (word().plus() & any().plus()).flatten();
 
 /// Too complicated, you just want the last word
 //  static final fieldPattern = prefix &
@@ -97,13 +97,31 @@ class CGRecordLayoutPatterns {
 class Field {
   final String name;
   final int offset;
-  final bool hasBitFields;
-
-  Field(this.name, this.offset, this.hasBitFields);
+  final int bitFieldStart, bitFieldEnd;
 
   // known from IRgen
   String declId;
   String type, desugaredType;
+
+  Field(this.name, this.type, this.offset, [this.bitFieldStart,this.bitFieldEnd]);
+
+  factory Field.fromParserResult(List<dynamic> result) {
+    final r1 = result[1];
+    final split = r1.lastIndexOf(' ');
+    final name = r1.substring(split + 1);
+    final type = r1.substring(0, split);
+
+    if (result[0] is List<dynamic>) {
+      List<dynamic> rr = result[0];
+      return Field(name, type, int.parse(rr[0]), int.parse(rr[1]), int.parse(rr[2]));
+    }else {
+      final r0 = result[0] as String;
+      return Field(name, type, int.parse(r0));
+    }
+  }
+
+  @override
+  String toString() => '$name, $type, $offset, $bitFieldStart, $bitFieldEnd';
 }
 
 enum RecordType {
@@ -127,12 +145,10 @@ class Record {
   RecordType type;// if anon the type is declared on the 1st line in AST, otherwise no.
   // although offset 0 for all fields, is a strong clue // TODO
 
+  Record(this.identifier, [this.isAnon = false, this.type, this.parentIdentifier = null]);
 
-  Record(this.identifier, [this.isAnon = false, this.parentIdentifier = null, this.type]);
-
-  static RecordType typeFromString(String s) {
-    return s == 'struct' ? RecordType.struct : RecordType.union;
-  }
+  static RecordType typeFromString(String s) =>
+    s == 'struct' ? RecordType.struct : RecordType.union;
 
   factory Record.fromParserResult(dynamic result) {
     if (result is String) {
@@ -143,16 +159,19 @@ class Record {
 
     if (result is List) {
       if (result.length == 2) {
-        return Record(result[1], true, null, rtype);
+        return Record(result[1], true, rtype);
       }
 
       if (result.length == 3) {
-        return Record(result[2], true, result[1], rtype);
+        return Record(result[2], true, rtype, result[1]);
       }
     }
 
     throw Exception("Bad result from parser");
   }
+
+  @override
+  String toString() => '$identifier, $isAnon, $type, $parentIdentifier';
 }
 
 // poor person's state machine

@@ -224,8 +224,6 @@ void main() {
       final result = AstRecordLayoutPatterns.second
           .parse(line).value;
 
-//      print ('"$result" result of "$line"');
-
       if (line.contains("::(")) {
         expect(result.length, 3);
         continue;
