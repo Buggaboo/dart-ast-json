@@ -301,8 +301,6 @@ class ExtensionBuilder with DeclUtil implements Builder {
 
     final records = <Record>[];
     for (var rawLine in await File(inputId.path).readAsLines()) {
-      if (rawLine.isEmpty) { continue; }
-      final l = rawLine.trim;
 
     }
 

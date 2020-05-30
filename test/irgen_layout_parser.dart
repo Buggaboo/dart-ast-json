@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart';
+import "test_helpers.dart" show ListDynamic;
 
 final recordDecls =
 """
@@ -25,7 +26,7 @@ Record: RecordDecl 0x116084760 </pyminiaudio/miniaudio/miniaudio.h:23529:9, line
 Record: RecordDecl 0x7fb209b557e8 </Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/CoreAudio.framework/Headers/CoreAudioTypes.h:756:1, line:767:1> line:756:8 struct SMPTETime definition
 Record: RecordDecl 0x7fb209ad21a0 </pyminiaudio/miniaudio/miniaudio.h:9375:9, line:9382:1> line:9375:9 struct definition
 Record: RecordDecl 0x11622b730 </pyminiaudio/miniaudio/miniaudio.h:39799:9, line:39808:1> line:39799:9 struct definition
-Record: RecordDecl 0x1162ae0a8 </pyminiaudio/miniaudio/stb_vorbis.c:1298:9, line:1301:1> line:1298:9 struct definition""";
+Record: RecordDecl 0x1162ae0a8 </pyminiaudio/miniaudio/stb_vorbis.c:1298:9, line:1301:1> line:1298:9 struct definition""".split("\n");
 
 final trickyRecordDecls = [
   'Record: RecordDecl 0x7fb20b287118 </pyminiaudio/miniaudio/miniaudio.h:3601:5, line:3646:5> line:3601:5 union definition',
@@ -102,13 +103,39 @@ final firstDegreeFields =
 `-FieldDecl 0x7fb20b0d0c50 <col:5, col:67> col:58 referenced scfcod 'drmp3_uint8 [64]'
 `-FieldDecl 0x7fb20b0d0ee0 <col:5, col:45> col:45 referenced band_count 'drmp3_uint8':'unsigned char'
 `-FieldDecl 0x7fb20799ffc0 <col:43, col:77> col:48 __opaque 'char [4]'
-`-FieldDecl 0x1162ae1c0 <col:4, col:13> col:13 referenced id 'uint16':'unsigned short'""";
+`-FieldDecl 0x1162ae1c0 <col:4, col:13> col:13 referenced id 'uint16':'unsigned short'
+|-FieldDecl 0x7fb20b27c708 <line:2899:9, line:2902:11> col:11 posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2899:9)':'struct ma_thread::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2899:9)'
+|-FieldDecl 0x7fb20b2887c8 <line:3674:9, line:3677:11> col:11 linear 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3674:9)':'struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3674:9)'
+|-FieldDecl 0x7fb20b264dd8 <line:2476:9, line:2480:11> col:11 linear 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2476:9)':'struct ma_data_converter_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2476:9)'
+|-FieldDecl 0x7fb20b263788 <line:2437:5, line:2441:7> col:7 weights 'union (anonymous union at /pyminiaudio/miniaudio/miniaudio.h:2437:5)':'union ma_channel_converter::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2437:5)'
+|-FieldDecl 0x7fb20b28a2b8 <line:3819:9, line:3836:11> col:11 coreaudio 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3819:9)':'struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3819:9)'
+|-FieldDecl 0x7fb20b288a38 <line:3671:5, line:3682:7> col:7 resampling 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3671:5)':'struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3671:5)'
+|-FieldDecl 0x7fb20b2892a8 <line:3683:5, line:3700:7> col:7 playback 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3683:5)':'struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3683:5)'
+|-FieldDecl 0x7fb20b289b18 <line:3701:5, line:3718:7> col:7 capture 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3701:5)':'struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3701:5)'
+|-FieldDecl 0x7fb20b282498 <line:3178:9, line:3181:11> col:11 linear 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3178:9)':'struct ma_device_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3178:9)'
+|-FieldDecl 0x7fb20b282708 <line:3175:5, line:3186:7> col:7 resampling 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3175:5)':'struct ma_device_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3175:5)'
+|-FieldDecl 0x7fb20b282af8 <line:3187:5, line:3194:7> col:7 playback 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3187:5)':'struct ma_device_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3187:5)'
+|-FieldDecl 0x7fb20b282e78 <line:3195:5, line:3202:7> col:7 capture 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3195:5)':'struct ma_device_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3195:5)'
+|-FieldDecl 0x7fb20b283148 <line:3204:5, line:3210:7> col:7 wasapi 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3204:5)':'struct ma_device_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3204:5)'
+|-FieldDecl 0x7fb20b283418 <line:3211:5, line:3217:7> col:7 alsa 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3211:5)':'struct ma_device_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3211:5)'
+|-FieldDecl 0x7fb20b286cb8 <line:3485:9, line:3512:11> col:11 coreaudio 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3485:9)':'struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3485:9)'
+|-FieldDecl 0x7fb20b2878e8 <line:3625:9, line:3643:11> col:11 posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3625:9)':'struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3625:9)'
+|-FieldDecl 0x7fb20b27db28 <line:2967:9, line:2970:11> col:11 referenced posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+|-FieldDecl 0x7fb20b283b28 <line:3231:5, line:3234:7> col:7 alsa 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3231:5)':'struct ma_context_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3231:5)'
+|-FieldDecl 0x7fb20b283da8 <line:3235:5, line:3240:7> col:7 pulse 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3235:5)':'struct ma_context_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3235:5)'
+|-FieldDecl 0x7fb20b283fd8 <line:3241:5, line:3245:7> col:7 coreaudio 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:3241:5)':'struct ma_context_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3241:5)'
+|-FieldDecl 0x7fb20b297028 <line:5267:9, line:5270:11> col:11 referenced linear 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:5267:9)':'struct ma_decoder_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:5267:9)'
+|-FieldDecl 0x7fb20b297298 <line:5264:5, line:5275:7> col:7 referenced resampling 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:5264:5)':'struct ma_decoder_config::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:5264:5)'
+|-FieldDecl 0x7fb20b2a4a68 <line:5494:9, line:5499:11> col:11 referenced pink 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:5494:9)':'struct ma_noise::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:5494:9)'""".split("\n");
 
 final trickyIrgenFields =
 """
 |-FieldDecl 0x7fb20780dc08 <<invalid sloc>> <invalid sloc> gp_offset 'unsigned int'
 |-FieldDecl 0x7fb20780dc58 <<invalid sloc>> <invalid sloc> fp_offset 'unsigned int'
-|-FieldDecl 0x7fb20780dca8 <<invalid sloc>> <invalid sloc> overflow_arg_area 'void *'""";
+|-FieldDecl 0x7fb20780dca8 <<invalid sloc>> <invalid sloc> overflow_arg_area 'void *'
+|-FieldDecl 0x7fb20b287018 <line:3300:5> col:5 implicit 'union ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3300:5)'
+|-FieldDecl 0x7fb20b287ac8 <line:3601:5> col:5 implicit 'union ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3601:5)'
+|-FieldDecl 0x7fb20b27dc88 <line:2958:5> col:5 implicit referenced 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'""".split("\n");
 
 final LLVMTypes =
 """
@@ -141,7 +168,7 @@ LLVMType:%struct.AudioBuffer = type { i32, i32, i8* }
 LLVMType:%struct.AudioBufferList = type { i32, [1 x %struct.AudioBuffer] }
 LLVMType:%struct.AudioStreamBasicDescription = type { double, i32, i32, i32, i32, i32, i32, i32, i32 }
 LLVMType:%struct.AudioValueRange = type { double, double }
-LLVMType:%struct.AudioStreamRangedDescription = type { %struct.AudioStreamBasicDescription, %struct.AudioValueRange }""";
+LLVMType:%struct.AudioStreamRangedDescription = type { %struct.AudioStreamBasicDescription, %struct.AudioValueRange }""".split("\n");
 
 void main() {
 
@@ -153,11 +180,23 @@ void main() {
   final LLVMTypePattern = CGRecordLayoutPatterns.LLVMTypePattern;
 
   test("CG LLVM patterns", () {
-    final LLVMTypes0 = LLVMTypes.split('\n');
-    for (int i=0; i<LLVMTypes0.length; i++) {
-      if (!LLVMTypePattern.accept(LLVMTypes0[i])) {
-        fail("Failed on line $i: ${LLVMTypes0[i]}");
+    for (int i=0; i<LLVMTypes.length; i++) {
+      final line = LLVMTypes[i];
+      if (!LLVMTypePattern.accept(line)) {
+        fail("Failed on line $i: ${line}");
       }
+      final result = LLVMTypePattern.parse(line).value;
+      /*
+      "[struct, __loadu_ps, <4 x float> ]"
+      from "LLVMType:%struct.__loadu_ps = type { <4 x float> }"
+          "[union, anon.61, i64 ]"
+      from "LLVMType:%union.anon.61 = type { i64 }"
+          "[union, anon.62, i32 ]"
+      from "LLVMType:%union.anon.62 = type { i32 }"
+     */
+      expect(result.length, 3);
+      expect(result.hasNoNulls(), true);
+//      print ('"$result"\nfrom "$line"');
     }
 
     // first line
@@ -188,16 +227,21 @@ void main() {
     expect(fieldPattern.accept("`-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 referenced __varName__ 'volatile double'"), true);
     expect(fieldPattern.accept("`-FieldDecl 0x7fb20b0d0ba8 <col:5, col:55> col:44 referenced superVarName 'const double'"), true);
 
-    final inputs2 = firstDegreeFields.split("\n");
-    for (int i=0; i<inputs2.length; i++) {
-      if (!fieldPattern.accept(inputs2[i])) {
-        fail("Failed on line $i: ${inputs2[i]}");
+    for (int i=0; i<firstDegreeFields.length; i++) {
+      final line = firstDegreeFields[i];
+      if (!fieldPattern.accept(line)) {
+        fail("Failed on line $i: ${line}");
       }
+      final result = fieldPattern.parse(line).value;
+      expect(result.length, 3);
+      expect(result.hasNoNulls(), true);
+      // 0x116295640, p_last, ProbedPage
+      // 0x7fb20b0d0a80, stereo_bands, unsigned char
+//      print('"$result" from "$line"');
     }
 
-    final trickyIrgenFields0 = trickyIrgenFields.split('\n');
-    for (int i=0; i<trickyIrgenFields0.length; i++) {
-      expect(fieldPattern.accept(trickyIrgenFields0[i]), false);
+    for (int i=0; i<trickyIrgenFields.length; i++) {
+      expect(fieldPattern.accept(trickyIrgenFields[i]), false);
     }
 
     // first line
@@ -230,11 +274,19 @@ void main() {
     // 'col:' instead of 'line:'
     expect(second.accept(trickyRecordDecls[4]), true);
 
-    final inputs1 = recordDecls.split("\n");
-    for (int i=0; i<inputs1.length; i++) {
-      if (!second.accept(inputs1[i])) {
-        fail("Failed on line $i: ${inputs1[i]}");
+    for (int i=0; i<recordDecls.length; i++) {
+      final line = recordDecls[i];
+      if (!second.accept(line)) {
+        fail("Failed on line $i: $line");
       }
+
+      final result = second.parse(line).value;
+      // 0x116294e88, /pyminiaudio/miniaudio/stb_vorbis.c:768:1, stb_vorbis
+      // 0x116294e88, /pyminiaudio/miniaudio/stb_vorbis.c:768:1, union definition
+      // 0x116294e88, /pyminiaudio/miniaudio/stb_vorbis.c:768:1, struct definition
+      expect(result.length, 3);
+      expect(result.hasNoNulls(), true);
+//      print('"$result" from "$line"');
     }
   });
 }

@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart';
+import "test_helpers.dart" show ListDynamic;
 
 final recordIdentifier =
 """
@@ -63,7 +64,7 @@ final recordIdentifier =
          0 | struct (anonymous at /pyminiaudio/miniaudio/miniaudio.h:2943:9)
          0 | struct (anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)
          0 | ma_device_id
-         0 | struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3485:9)""";
+         0 | struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3485:9)""".split("\n");
 
 void main() {
 
@@ -209,28 +210,29 @@ void main() {
   });
 
   test("accept record identifiers", () {
-    final recordIds = recordIdentifier.split('\n');
-    for (int i=0; i<recordIds.length; i++) {
-      if (!AstRecordLayoutPatterns.second.accept(recordIds[i].trim())) {
-        fail('Failed at line $i, with:\n"${recordIds[i]}"');
+    for (int i=0; i<recordIdentifier.length; i++) {
+      final line = recordIdentifier[i].trim();
+      if (!AstRecordLayoutPatterns.second.accept(line.trim())) {
+        fail('Failed at line $i, with:\n"${line}"');
       }
     }
   });
 
   test("extract identifiers for anonymous Record", () {
-    final recordIds = recordIdentifier.split('\n');
-    for (int i=0; i<recordIds.length; i++) {
-      final line = recordIds[i].trim();
+    for (int i=0; i<recordIdentifier.length; i++) {
+      final line = recordIdentifier[i].trim();
       final result = AstRecordLayoutPatterns.second
           .parse(line).value;
 
       if (line.contains("::(")) {
         expect(result.length, 3);
+//        expect(result.hasNoNulls(), true); // FIXME: it works on irgen
         continue;
       }
 
       if (line.contains(" (anon")) {
         expect(result.length, 2);
+//        expect(result.hasNoNulls(), true); // FIXME: it works on irgen
       }
     }
   });

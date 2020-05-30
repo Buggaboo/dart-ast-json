@@ -1285,21 +1285,6 @@ void main() {
       if (!fieldPattern.accept(trim)) {
         fail('Failed at line $i, with:\n"${f[i]}"');
       }
-
-      var result = fieldPattern.parse(trim).value;
-
-      final r1 = result[1];
-      final r0 = result[0];
-      final split = r1.lastIndexOf(' ');
-      final name = r1.substring(split + 1);
-      final type = r1.substring(0, split);
-
-      final str = Field.fromParserResult(result).toString();
-      if (result[0] is List<dynamic>) {
-        expect(str, "$name, $type, ${r0[0]}, ${r0[1]}, ${r0[2]}");
-      }else {
-        expect(str, "$name, $type, $r0, null, null");
-      }
     }
   });
 }
