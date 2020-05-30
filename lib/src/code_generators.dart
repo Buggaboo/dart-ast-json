@@ -2,8 +2,6 @@ import 'serializers.dart';
 import 'layout_parser.dart';
 import 'package:logging/logging.dart' show Logger;
 
-// IDEA: TODO use @annotation to generate what you need
-
 String opCodeWithInteger(Decl e, int i) {
   if (e.inner == null) return " = $i";
 
@@ -371,8 +369,9 @@ import '$importRoot.t.dart';
 ${recordDecls.map((r) => declareStructMembers(r, typedefMap, log)).toList().join("\n")}
 ''';
 
-
-String declareExtensions(String importRoot, List<Record> recordLayouts, List<Decl> recordDecls, Map<String, Decl> typedefMap, Logger log) =>
+String declareExtensions(String importRoot,
+    Map<String, Record> ast, Map<String, Record> irgen,
+    List<Decl> recordDecls, Map<String, Decl> typedefMap, Logger log) =>
 '''
 import 'dart:ffi';
 import "dart:typed_data";

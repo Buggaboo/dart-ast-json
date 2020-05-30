@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert' show JsonDecoder, JsonEncoder;
+import 'dart:async' show Completer;
 import 'package:build/build.dart';
 import 'package:glob/glob.dart';
 
@@ -299,10 +300,11 @@ class ExtensionBuilder with DeclUtil implements Builder {
   Future<void> build(BuildStep step) async {
     final inputId = step.inputId;
 
-    final records = <Record>[];
-    for (var rawLine in await File(inputId.path).readAsLines()) {
-
-    }
+    final astRecords = <String, Record>{};
+    final irgenRecords = <String, Record>{};
+    final completer = Completer();
+    layoutParser(completer, astRecords, irgenRecords, File(inputId.path).readAsLines());
+    await completer.isCompleted;
 
     final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
     final typedefDecls = await listDecl(step, typedefsInputId);
@@ -314,7 +316,7 @@ class ExtensionBuilder with DeclUtil implements Builder {
     final structDecls = await listDecl(step, structsInputId);
 
     await step.writeAsString(inputId.changeExtension(output),
-        declareExtensions(inputId.root, records, structDecls, typedefMap, log));
+        declareExtensions(inputId.root, astRecords, irgenRecords, structDecls, typedefMap, log));
   }
 }
 

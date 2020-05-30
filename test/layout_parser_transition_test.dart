@@ -179,8 +179,8 @@ interogateRecord(Map<String, Record> records) =>
 
 void main() {
   test("parser state transition", () async {
-    var astRecords = <String, Record>{};
-    var irgenRecords = <String, Record>{};
+    final astRecords = <String, Record>{};
+    final irgenRecords = <String, Record>{};
 
     final completer = Completer();
     Future<Iterable<String>> f = Future.value(everything.split('\n').map((l) => l.trim()).toList());
