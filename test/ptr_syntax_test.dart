@@ -11,6 +11,7 @@ class StructB extends Struct {
   Pointer<Uint8> __origin__;
 }
 
+/// Theory: test go boom (segfault), because memory (thread) protection?!
 extension StructTest on StructB {
   Pointer<Uint64> get ptrInt =>
       __origin__.elementAt(0).cast<Uint64>();
@@ -32,6 +33,8 @@ void main() {
 //      structA.ref.ptrInt.value = 1337; // wtf, hard crash!
       structA.ref.tInt = 1337;
       final structB = structA.cast<StructB>();
+
+//      print (structB.ref.tInt); // boom!
 
       expect(structB.ref.__origin__.address, structA.ref.ptrInt.address);
 //      expect(structB.ref.tInt, structA.ref.tInt); // booom!

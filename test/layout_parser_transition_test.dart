@@ -167,14 +167,14 @@ fields:
   subFormat: subFormat, drwav_uint8 [16], null, null, null
  '''.trim();
 
-interogateFields(Map<String, Field> fields) =>
+interrogateFields(Map<String, Field> fields) =>
   fields.keys.map((k) => '  $k: ${fields[k]}').toList().join('\n');
 
-interogateRecord(Map<String, Record> records) =>
+interrogateRecord(Map<String, Record> records) =>
   'records#: ${records.length}\n'
   'keys:\n${records.keys.map((k) => '  $k').toList().join('\n')}\n'
   'values:\n${records.values.map((o) => '  $o').toList().join('\n')}\n'
-  'fields:${records.values.map((o) => '\n${interogateFields(o.fields)}').toList().join('\n')}'
+  'fields:${records.values.map((o) => '\n${interrogateFields(o.fields)}').toList().join('\n')}'
   ;
 
 void main() {
@@ -190,13 +190,13 @@ void main() {
 
     // The doubles in IRgen point to the same object
     expect(
-      '${interogateRecord(astRecords)}\n'
-      '${interogateRecord(irgenRecords)}'.trim(),
+      '${interrogateRecord(astRecords)}\n'
+      '${interrogateRecord(irgenRecords)}'.trim(),
       check);
 
 //    print(
-//      '${interogateRecord(astRecords)}\n'
-//      '${interogateRecord(irgenRecords)}'.trim(),
+//      '${interrogateRecord(astRecords)}\n'
+//      '${interrogateRecord(irgenRecords)}'.trim(),
 //    );
   });
 }
