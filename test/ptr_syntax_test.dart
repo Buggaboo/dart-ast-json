@@ -26,20 +26,23 @@ extension StructTest on StructB {
 
 void main() {
   test("Pass values between structs via extensions", () {
-    final structA = allocate<StructA>();
-//    structA.ref.ptrInt.value = 1337; // wtf, hard crash!
-    structA.ref.tInt = 1337;
-    final structB = structA.cast<StructB>();
+    Pointer<StructA> structA;
+    try {
+      structA = allocate<StructA>();
+//      structA.ref.ptrInt.value = 1337; // wtf, hard crash!
+      structA.ref.tInt = 1337;
+      final structB = structA.cast<StructB>();
 
-    expect(structB.ref.__origin__.address, structA.ref.ptrInt.address);
-    // expect(structB.ref.tInt, structA.ref.tInt); // booom!
-//    structB.ref.tInt = 1338; // boooom!
+      expect(structB.ref.__origin__.address, structA.ref.ptrInt.address);
+//      expect(structB.ref.tInt, structA.ref.tInt); // booom!
+//      structB.ref.tInt = 1338; // boooom!
 
-    // boooooom!
-//    print (
-//      '${structB.ref.ptrInt.value} '
-//      '${structB.ref.tInt}');
-
-    free(structA);
+      // boooooom!
+//      print (
+//        '${structB.ref.ptrInt.value} '
+//        '${structB.ref.tInt}');
+    }finally {
+      free(structA);
+    }
   });
 }
