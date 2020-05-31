@@ -306,9 +306,12 @@ class ExtensionBuilder with DeclUtil implements Builder {
 
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
-    final lines = await File(inputId.path).readAsLines().then((lines) =>
-        layoutParser(astRecords, irgenRecords, lines)
-    );
+    final completer = Completer();
+    final lines = await File(inputId.path).readAsLines().then((lines) {
+      layoutParser(astRecords, irgenRecords, lines);
+      completer.complete;
+    });
+    await completer.isCompleted;
 
     await step.writeAsString(inputId.changeExtension(output),
         declareExtensions(inputId.root, astRecords, irgenRecords, structDecls, typedefMap, log));
