@@ -190,9 +190,6 @@ abstract class _Builder with DeclUtil implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => _buildExtensions;
-
-
-
 }
 
 extension on AssetId {
@@ -300,20 +297,18 @@ class ExtensionBuilder with DeclUtil implements Builder {
   Future<void> build(BuildStep step) async {
     final inputId = step.inputId;
 
-    final astRecords = <String, Record>{};
-    final irgenRecords = <String, Record>{};
-    final completer = Completer();
-    final lines = File(inputId.path).readAsLinesSync();
-    layoutParser(completer, astRecords, irgenRecords, lines);
-
     final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
     final typedefDecls = await listDecl(step, typedefsInputId);
-
+    final structsInputId = await step.findAssets(new Glob('**.sjson')).first;
+    final structDecls = await listDecl(step, structsInputId);
     final typedefMap = <String, Decl>{};
     typedefDecls.forEach((t) => typedefMap[t.name] = t);
 
-    final structsInputId = await step.findAssets(new Glob('**.sjson')).first;
-    final structDecls = await listDecl(step, structsInputId);
+    final astRecords = <String, Record>{};
+    final irgenRecords = <String, Record>{};
+    final lines = await File(inputId.path).readAsLines().then((lines) =>
+        layoutParser(astRecords, irgenRecords, lines)
+    );
 
     await step.writeAsString(inputId.changeExtension(output),
         declareExtensions(inputId.root, astRecords, irgenRecords, structDecls, typedefMap, log));

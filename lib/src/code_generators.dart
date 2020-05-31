@@ -390,15 +390,11 @@ String Function(Record) declareClassFromIrgenRecords(Map<String, Record> ast,
 String sortIrgenRecords(Map<String, Record> ast, Map<String, Record> irgen,
   Map<String, Decl> typedefMap, Logger log) {
 
-  log.info(ast);
-  log.info(irgen);
-
   final uniqIrgen = Set<Record>.from(irgen.values);
+
   // ascending (it won't impact the offsets in any way, just easier to debug)
   final irgenList = uniqIrgen.toList();
   irgenList.sort((s, t) => s.counter.compareTo(t.counter));
-
-  log.info(irgenList); // no element
 
   final generate = declareClassFromIrgenRecords(ast, irgen, typedefMap, log);
   return irgenList.map((i) => generate(i)).toList().join('\n');
