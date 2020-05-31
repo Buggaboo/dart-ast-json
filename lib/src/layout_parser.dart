@@ -100,6 +100,7 @@ class Field {
   final String name;
   final int offset;
   final int bitFieldStart, bitFieldEnd;
+  int counter = 0; // TODO this deserves its own ctor
 
   // known from IRgen
   String declId;
@@ -218,7 +219,7 @@ dynamic Function(List<dynamic>) fromIrgenSecondUpdateRecord(String identifier) {
   };
 }
 
-dynamic Function(List<dynamic>) fromIrgenFieldUpdateField(Record record) {
+dynamic Function(List<dynamic>) fromIrgenFieldUpdateField(Record record, int counter) {
   return (dynamic d) {
     final v = d as List<dynamic>;
 
@@ -228,6 +229,7 @@ dynamic Function(List<dynamic>) fromIrgenFieldUpdateField(Record record) {
     final type = result.isSuccess ? result.value[2] : v[2];
 
     Field field = Field(v[1], type);
+    field.counter = counter;
     field.declId = v[0];
     field.desugaredType = v[2];
     record.fields[v[1]] = field;
@@ -270,6 +272,7 @@ void layoutParser(Completer completer, Map<String, Record> astRecords, Map<Strin
 
   var patterns = <Parser>[ AstRecordLayoutPatterns.first ];
   Record activeRecord;
+  int fieldCounter = 0;
 
   for (var line in await lines) {
     if (line.isEmpty) { continue; }
@@ -282,6 +285,7 @@ void layoutParser(Completer completer, Map<String, Record> astRecords, Map<Strin
 
     if (pattern == AstRecordLayoutPatterns.first || pattern == IRgenRecordLayoutPatterns.first) {
       activeRecord = null; // wipe clean, just in case
+      fieldCounter = 0;
     }
 
     if (maps[pattern] != null) {
@@ -299,7 +303,7 @@ void layoutParser(Completer completer, Map<String, Record> astRecords, Map<Strin
       activeRecord = fromIrgenSecondUpdateRecord(identifier)(result);
       irgenRecords[identifier] = activeRecord;
     }else if (pattern == IRgenRecordLayoutPatterns.fieldPattern) {
-      pattern.map(fromIrgenFieldUpdateField(activeRecord)).parse(line);
+      pattern.map(fromIrgenFieldUpdateField(activeRecord, fieldCounter++)).parse(line);
     }else if (pattern == CGRecordLayoutPatterns.LLVMTypePattern) {
       final rvalue = pattern.map(fromCGUpdateRecord(activeRecord)).parse(line).value;
       irgenRecords[rvalue.isAnon ? rvalue.identifier : rvalue.generatedName] = rvalue;
