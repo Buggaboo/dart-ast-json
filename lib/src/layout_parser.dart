@@ -1,6 +1,5 @@
 import 'package:petitparser/petitparser.dart';
 import 'dart:convert';
-import 'dart:async' show Completer;
 import 'package:crypto/crypto.dart';
 
 String generateMd5(String input) {
@@ -142,6 +141,7 @@ class Record {
   bool isAnon;
   final fields = <String, Field>{};
   final String parentIdentifier;
+  int counter; // TODO deserves its own place in a ctor
 
   // known from IRgen
   // this can be used for debugging, when considering
@@ -209,10 +209,11 @@ String fromIrgenSecondIdentifier(List<dynamic> v) {
   return v[2];
 }
 
-dynamic Function(List<dynamic>) fromIrgenSecondUpdateRecord(String identifier) {
+dynamic Function(List<dynamic>) fromIrgenSecondUpdateRecord(String identifier, int counter) {
   return (dynamic d) {
     final v = d as List<dynamic>;
     Record record = Record(identifier);
+    record.counter = counter;
     record.declId = v[0];
     record.type = v[2].contains('union') ? RecordType.union : RecordType.struct;
     return record;
@@ -268,13 +269,14 @@ final maps = <Parser, dynamic Function(dynamic)>{
 //  CGRecordLayoutPatterns.LLVMTypePattern :
 };
 
-void layoutParser(Completer completer, Map<String, Record> astRecords, Map<String, Record> irgenRecords, Future<Iterable<String>> lines) async {
+void layoutParser(Map<String, Record> astRecords, Map<String, Record> irgenRecords, List<String> lines) {
 
   var patterns = <Parser>[ AstRecordLayoutPatterns.first ];
   Record activeRecord;
   int fieldCounter = 0;
+  int irgenCounter = 0;
 
-  for (var line in await lines) {
+  for (var line in lines) {
     if (line.isEmpty) { continue; }
 
     // fold and reduce, required more noodling, due to case where all fail (i.e. skipping)
@@ -300,7 +302,7 @@ void layoutParser(Completer completer, Map<String, Record> astRecords, Map<Strin
     }else if (pattern == IRgenRecordLayoutPatterns.second) {
       final result = pattern.parse(line).value;
       final identifier = fromIrgenSecondIdentifier(result);
-      activeRecord = fromIrgenSecondUpdateRecord(identifier)(result);
+      activeRecord = fromIrgenSecondUpdateRecord(identifier, irgenCounter++)(result);
       irgenRecords[identifier] = activeRecord;
     }else if (pattern == IRgenRecordLayoutPatterns.fieldPattern) {
       pattern.map(fromIrgenFieldUpdateField(activeRecord, fieldCounter++)).parse(line);
@@ -311,6 +313,4 @@ void layoutParser(Completer completer, Map<String, Record> astRecords, Map<Strin
 
     patterns = transitions[pattern];
   }
-
-  completer.complete;
 }

@@ -303,8 +303,8 @@ class ExtensionBuilder with DeclUtil implements Builder {
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
     final completer = Completer();
-    layoutParser(completer, astRecords, irgenRecords, File(inputId.path).readAsLines());
-    await completer.isCompleted;
+    final lines = File(inputId.path).readAsLinesSync();
+    layoutParser(completer, astRecords, irgenRecords, lines);
 
     final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
     final typedefDecls = await listDecl(step, typedefsInputId);

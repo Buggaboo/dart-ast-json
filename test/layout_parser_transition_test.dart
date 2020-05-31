@@ -1,5 +1,4 @@
 import 'package:test/test.dart';
-import 'dart:async' show Completer;
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart';
 
@@ -182,11 +181,8 @@ void main() {
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
 
-    final completer = Completer();
-    Future<Iterable<String>> f = Future.value(everything.split('\n').map((l) => l.trim()).toList());
-    layoutParser(completer, astRecords, irgenRecords, f);
-
-    await completer.isCompleted;
+    final list = everything.split('\n').map((l) => l.trim()).toList();
+    layoutParser(astRecords, irgenRecords, list);
 
     // The doubles in IRgen point to the same object
     expect(
