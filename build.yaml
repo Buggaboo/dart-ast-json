@@ -63,6 +63,6 @@ builders:
     builder_factories: ['extensionBuilder']
     build_extensions:
       "$lib$": [ ".x.dart" ]
-    required_inputs: ['.tjson', '.sjson', '.layout']
+    required_inputs: [ '.layout' ]
     auto_apply: dependents
     build_to: source

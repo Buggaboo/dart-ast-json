@@ -370,8 +370,7 @@ ${recordDecls.map((r) => declareStructMembers(r, typedefMap, log)).toList().join
 ''';
 
 String Function(Record) declareClassFromIrgenRecords(Map<String, Record> ast,
-  Map<String, Record> irgen,
-  Map<String, Decl> typedefMap, Logger log) {
+  Map<String, Record> irgen, Logger log) {
 
   return (Record record) {
     final offsets = record.fields.values.toList()
@@ -387,8 +386,7 @@ String Function(Record) declareClassFromIrgenRecords(Map<String, Record> ast,
   };
 }
 
-String sortIrgenRecords(Map<String, Record> ast, Map<String, Record> irgen,
-  Map<String, Decl> typedefMap, Logger log) {
+String sortIrgenRecords(Map<String, Record> ast, Map<String, Record> irgen, Logger log) {
 
   final uniqIrgen = Set<Record>.from(irgen.values);
 
@@ -396,13 +394,12 @@ String sortIrgenRecords(Map<String, Record> ast, Map<String, Record> irgen,
   final irgenList = uniqIrgen.toList();
   irgenList.sort((s, t) => s.counter.compareTo(t.counter));
 
-  final generate = declareClassFromIrgenRecords(ast, irgen, typedefMap, log);
+  final generate = declareClassFromIrgenRecords(ast, irgen, log);
   return irgenList.map((i) => generate(i)).toList().join('\n');
 }
 
 String declareExtensions(String importRoot,
-    Map<String, Record> ast, Map<String, Record> irgen,
-    List<Decl> recordDecls, Map<String, Decl> typedefMap, Logger log) =>
+    Map<String, Record> ast, Map<String, Record> irgen, Logger log) =>
 '''
 import 'dart:ffi';
 import "dart:typed_data";
@@ -412,6 +409,6 @@ import '$importRoot.t.dart';
 // ignore_for_file: camel_case_types
 // ignore_for_file: non_constant_identifier_names
 
-${sortIrgenRecords(ast, irgen, typedefMap, log)}
+${sortIrgenRecords(ast, irgen, log)}
 
 ''';

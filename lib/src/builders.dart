@@ -297,24 +297,12 @@ class ExtensionBuilder with DeclUtil implements Builder {
   Future<void> build(BuildStep step) async {
     final inputId = step.inputId;
 
-    final typedefsInputId = await step.findAssets(new Glob('**.tjson')).first;
-    final typedefDecls = await listDecl(step, typedefsInputId);
-    final structsInputId = await step.findAssets(new Glob('**.sjson')).first;
-    final structDecls = await listDecl(step, structsInputId);
-    final typedefMap = <String, Decl>{};
-    typedefDecls.forEach((t) => typedefMap[t.name] = t);
-
-    final completer = Completer();
-    final lines = await File(inputId.path).readAsLines().then((lines) async {
-      final astRecords = <String, Record>{};
-      final irgenRecords = <String, Record>{};
-      completer.complete;
-      layoutParser(astRecords, irgenRecords, lines);
-      await completer.isCompleted;
-      await step.writeAsString(inputId.changeExtension(output),
-          declareExtensions(inputId.root, astRecords, irgenRecords, structDecls, typedefMap, log));
-//      log.info(lines);
-    });
+    final lines = await File(inputId.path).readAsLines();
+    final astRecords = <String, Record>{};
+    final irgenRecords = <String, Record>{};
+    layoutParser(astRecords, irgenRecords, lines);
+    await step.writeAsString(inputId.changeExtension(output),
+      declareExtensions(inputId.root, astRecords, irgenRecords, log));
   }
 }
 
