@@ -276,7 +276,8 @@ void layoutParser(Map<String, Record> astRecords, Map<String, Record> irgenRecor
   int fieldCounter = 0;
   int irgenCounter = 0;
 
-  for (var line in lines) {
+  for (var _line in lines) {
+    final line = _line.trim();
     if (line.isEmpty) { continue; }
 
     // fold and reduce, required more noodling, due to case where all fail (i.e. skipping)
