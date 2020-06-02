@@ -19,34 +19,19 @@ final notNested = {
 
 const expected =
 '''
-[    null TypedefDecl gqb
-      void *(*)(void *) ;
-    ,     null TypedefDecl fpa
-      int (*)(int *, int *, gqb, void *) ;
-    ,     null TypedefDecl gqc
-      void *(*)(void *, void *) ;
-    ,     null TypedefDecl fpb
-      int (*)(int *, int *, gqc, void *) ;
-    ,     null TypedefDecl gqd
-      void *(*)(void *, void *) ;
-    ,     null TypedefDecl fpc
-      int (*)(int *, int *, gqd, void *, gqd) ;
-    ,     null TypedefDecl gqe
-      void *(*)(void *, void *) ;
-    ,     null TypedefDecl gqegqe
-      void *(*)(void *, void *, gqe, void *) ;
-    ,     null TypedefDecl fpd
-      int (*)(int *, int *, gqegqe, void *, gqe) ;
-    ,     null TypedefDecl gqfgqf
-      void *(*)(void *, hrghrg, void *) ;
-    ,     null TypedefDecl gqfgqfgqfgqf
-      void *(*)(void *, void *) ;
-    ,     null TypedefDecl hrghrg
-      void *(*)(void *) ;
-    ,     null TypedefDecl fpe
-      int (*)(int *, int *, gqfgqf, void *, gqfgqfgqfgqf) ;
-    ]
-''';
+null TypedefDecl gqb, type: void *(*)(void *) ;
+null TypedefDecl fpa, type: int (*)(int *, int *, gqb, void *) ;
+null TypedefDecl gqc, type: void *(*)(void *, void *) ;
+null TypedefDecl fpb, type: int (*)(int *, int *, gqc, void *) ;
+null TypedefDecl gqd, type: void *(*)(void *, void *) ;
+null TypedefDecl fpc, type: int (*)(int *, int *, gqd, void *, gqd) ;
+null TypedefDecl gqe, type: void *(*)(void *, void *) ;
+null TypedefDecl gqegqe, type: void *(*)(void *, void *, gqe, void *) ;
+null TypedefDecl fpd, type: int (*)(int *, int *, gqegqe, void *, gqe) ;
+null TypedefDecl gqfgqf, type: void *(*)(void *, hrghrg, void *) ;
+null TypedefDecl gqfgqfgqfgqf, type: void *(*)(void *, void *) ;
+null TypedefDecl hrghrg, type: void *(*)(void *) ;
+null TypedefDecl fpe, type: int (*)(int *, int *, gqfgqf, void *, gqfgqfgqfgqf) ;''';
 
 void main() {
   test("compare output of extracted function pointers", () {
@@ -55,7 +40,7 @@ void main() {
         .map((e) => Decl(name: e.key, type:Type(qualType: e.value))).toList();
     extractNestedFunPtrs(input, output);
 
-    expect(output.toString(), matches(expected));
+    expect(output.join('\n'), expected);
   });
 
   test("test unnested", () {

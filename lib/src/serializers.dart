@@ -65,7 +65,7 @@ class Type {
 
   @override
   String toString() {
-    return '$qualType ; ${desugaredQualType ?? ""}';
+    return '$qualType ; ${desugaredQualType ?? ""}'.trim();
   }
 
   // remove:
