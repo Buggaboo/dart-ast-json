@@ -4,6 +4,12 @@ import 'package:petitparser/petitparser.dart';
 
 final recordIdentifier =
 """
+         0 | struct test
+         0 | union test
+         0 | struct __test__
+         0 | union __test__
+         0 | struct test__
+         0 | union test__
          0 | drflac_vorbis_comment_iterator
          0 | drflac_cuesheet_track_iterator
          0 | drflac_cuesheet_track
@@ -209,9 +215,10 @@ void main() {
   });
 
   test("accept record identifiers", () {
+    final second = AstRecordLayoutPatterns.second;
     for (int i=0; i<recordIdentifier.length; i++) {
       final line = recordIdentifier[i].trim();
-      if (!AstRecordLayoutPatterns.second.accept(line.trim())) {
+      if (!second.accept(line.trim())) {
         fail('Failed at line $i, with:\n"${line}"');
       }
     }

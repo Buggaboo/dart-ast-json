@@ -34,7 +34,7 @@ class AstRecordLayoutPatterns {
   static final anonAndNested = structOrUnion &
     wordPlusFlatten & (string('::(anonymous at ') & anonIdentifier & char(')')).pick(1);
 
-  static final second = (string('0 | ') & (anonAndNested | anon | wordPlusFlatten)).pick(1);
+  static final second = (string('0 | ') & (anonAndNested | anon | (structOrUnion & wordPlusFlatten).pick(1) | wordPlusFlatten)).pick(1);
   static final offsetBitFieldRange = (digitPlusFlatten & char(':')).pick(0) & (digitPlusFlatten & char('-')).pick(0) & digitPlusFlatten;
   static final offsets = offsetBitFieldRange | digitPlusFlatten;
   static final fieldPattern = (offsets & string(' |   ')).pick(0) & (word().plus() & any().plus()).flatten();
