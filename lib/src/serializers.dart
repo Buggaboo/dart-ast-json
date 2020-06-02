@@ -1,4 +1,3 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart' show Logger;
 import 'dart:math' show Random;
 
@@ -14,6 +13,7 @@ int countPointersBackwards(String s) {
       return counter;
     }
   }
+  return 0;
 }
 
 int normalizeSymbol(int i) {

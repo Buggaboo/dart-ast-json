@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
-import 'package:petitparser/petitparser.dart' show Parser, AcceptParser;
+import 'package:petitparser/petitparser.dart' show AcceptParser;
 
 final fields =
 """

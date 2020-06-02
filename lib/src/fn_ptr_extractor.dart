@@ -99,7 +99,7 @@ List<Decl> _extractor(String name, String type) {
       Decl(kind: 'TypedefDecl', name: e.key, type:Type(qualType: e.value))).toList();
 }
 
-List<Decl> extractNestedFunPtrs(List<Decl> extractable, List<Decl> typedefList) {
+void extractNestedFunPtrs(List<Decl> extractable, List<Decl> typedefList) {
   extractable.forEach((e) =>
       typedefList.addAll(_extractor(e.name, e.type.qualType)));
 }

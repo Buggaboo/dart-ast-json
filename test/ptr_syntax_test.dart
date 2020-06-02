@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import "package:ffi/ffi.dart" show allocate, free, Utf8;
+import "package:ffi/ffi.dart" show allocate, free;
 import "dart:ffi";
 
 final offsetPtr = 0;

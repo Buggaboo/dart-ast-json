@@ -1,6 +1,6 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:convert' show JsonDecoder, JsonEncoder;
-import 'dart:async' show Completer;
+import 'dart:convert';
 import 'package:build/build.dart';
 import 'package:glob/glob.dart';
 
@@ -100,7 +100,7 @@ class ASTResolver implements Builder {
 
     /// add `enum X -> intY`, made up typedefs
     for (var e in enumDeclList) {
-      final qualType = e?.find('EnumConstantDecl').type.qualType;
+      final qualType = e.find('EnumConstantDecl').type.qualType;
       if (qualType == null || e.name == null) { continue; }
       simpleTypedefList.add(Decl(
           id: e.id,

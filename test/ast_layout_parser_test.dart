@@ -1,7 +1,6 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart';
-import "test_helpers.dart" show ListDynamic;
 
 final recordIdentifier =
 """

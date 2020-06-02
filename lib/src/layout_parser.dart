@@ -177,6 +177,7 @@ class Record {
     }
 
 //    throw Exception("Bad result from parser");
+    return null;
   }
 
   @override
@@ -270,7 +271,6 @@ final maps = <Parser, dynamic Function(dynamic)>{
 };
 
 void layoutParser(Map<String, Record> astRecords, Map<String, Record> irgenRecords, List<String> lines) {
-
   var patterns = <Parser>[ AstRecordLayoutPatterns.first ];
   Record activeRecord;
   int fieldCounter = 0;
@@ -312,5 +312,6 @@ void layoutParser(Map<String, Record> astRecords, Map<String, Record> irgenRecor
     }
 
     patterns = transitions[pattern];
+
   }
 }
