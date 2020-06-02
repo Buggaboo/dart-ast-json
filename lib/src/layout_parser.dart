@@ -25,6 +25,7 @@ final type = (string('const ').optional() | string('volatile ')) & basicType &
 final fnPtr = (basicType & (space & pointer.star()).flatten() &
 string('(*)(') & type & (string(', ') & type).star() & char(')')).flatten();
 
+// TODO replace some of the picks with 'and', to get rid of awkward parentheses
 class AstRecordLayoutPatterns {
   static final first = string('*** Dumping AST Record Layout');
   static final structOrUnion = ((string('struct') | string('union')) & space).pick(0);
