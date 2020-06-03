@@ -38,13 +38,12 @@ class AstRecordLayoutPatterns {
   static final second = (string('0 | ') & (anonAndNested | anon | (structOrUnion & wordPlusFlatten).pick(1) | wordPlusFlatten)).pick(1);
   static final offsetBitFieldRange = (digitPlusFlatten & char(':')).pick(0) & (digitPlusFlatten & char('-')).pick(0) & digitPlusFlatten;
   static final offsets = offsetBitFieldRange | digitPlusFlatten;
-  static final fieldPattern = (offsets & string(' |   ')).pick(0) & (word().plus() & any().plus()).flatten();
-
-/// Too complicated, you just want the last word
-//  static final fieldPattern = prefix &
-//    (((fnPtr & space & wordPlusFlatten)..pick(2))
-//        .or((type & space & wordPlusFlatten)..pick(2))
-//        .or((basicType & space & wordPlusFlatten).pick(2)));
+  static final fieldPattern = (offsets & string(' |   ')).pick(0) &
+    (
+      (anonAndNested & space & word().plus()) |
+      (fnPtr & space & word().plus()) |
+      (word() & noneOf(')').plus() & char(')').end().not().optional())
+    ).flatten();
 
   static final last = (string('| [sizeof=') & digitPlusFlatten).pick(1) & (string(', align=') & digitPlusFlatten & char(']')).pick(1);
 }
@@ -88,7 +87,7 @@ class CGRecordLayoutPatterns {
   static final recordType = (char('%') & (string('struct') | string('union')) & char('.')).pick(1);
   static final LLVMTypePattern = (string('LLVMType:') & recordType).pick(1) &
   ((string('anon.') & digit().plus()) | wordPlusFlatten).flatten() &
-  (string(' = type { ') & noneOf('}').plus().flatten().trim() & string('}')).pick(1);
+  ((string(' = type { ') | string(' = type <{ ')) & noneOf('}').plus().flatten().trim() & string('}')).pick(1);
 
   static final penultimatelyIgnored = string("IsZeroInitializable:") |
     string('BitFields:[') | string("<CGBitFieldInfo");
@@ -271,8 +270,7 @@ final maps = <Parser, dynamic Function(dynamic)>{
 //  CGRecordLayoutPatterns.LLVMTypePattern :
 };
 
-void layoutParser(Map<String, Record> astRecords, Map<String, Record> irgenRecords, List<String> lines) {
-  var patterns = <Parser>[ AstRecordLayoutPatterns.first ];
+void layoutParser(List<Parser> patterns, Map<String, Record> astRecords, Map<String, Record> irgenRecords, List<String> lines) {
   Record activeRecord;
   int fieldCounter = 0;
   int irgenCounter = 0;

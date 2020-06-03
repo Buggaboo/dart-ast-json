@@ -89,6 +89,9 @@ void main() {
     expect(type.accept('const int ***'), true);
     expect(type.accept('const int **'), true);
     expect(type.accept('const int *'), true);
+    expect(type.accept('volatile int ***'), true);
+    expect(type.accept('volatile int **'), true);
+    expect(type.accept('volatile int *'), true);
   });
 
   test("basics array", () {
@@ -145,7 +148,6 @@ void main() {
   final splitLines = AST_RECORD_LAYOUT1.split('\n');
 
   test("verify patterns match", () {
-    final p = AstRecordLayoutPatterns.fieldPattern;
 
     // first line
     expect(AstRecordLayoutPatterns.first.accept(splitLines[0]), true);
@@ -157,6 +159,7 @@ void main() {
     expect(AstRecordLayoutPatterns.second.accept(splitLines[1]), true);
 
     // >2nd, stating the fields
+    final p = AstRecordLayoutPatterns.fieldPattern;
     expect(p.accept('137 |   int a'), true);
     expect(p.accept('137 |   int * a'), true);
     expect(p.accept('137 |   int [5] a'), true);
@@ -173,10 +176,11 @@ void main() {
     expect(p.accept('137 |   const int *[1234][1234] a'), true);
     expect(p.accept('137 |   const int **[1234][1234] a'), true);
 
-    expect(p.accept('88 |   const void * pData'), true);
-    expect(p.accept('32 |   drflac_subframe [8] subframes'), true);
-    expect(p.accept('24 |   drflac_uint32 pcmFramesRemaining'), true);
-    expect(p.accept('48 |   void *(*)(void *, size_t, void *) onRealloc'), true);
+    expect(p.accept('137 |   void (*)(int, struct __siginfo *, void *) __sa_sigaction'), true);
+    expect(p.accept('881 |   const void * pData'), true);
+    expect(p.accept('323 |   drflac_subframe [8] subframes'), true);
+    expect(p.accept('243 |   drflac_uint32 pcmFramesRemaining'), true);
+    expect(p.accept('487 |   void *(*)(void *, size_t, void *) onRealloc'), true);
 
     // We only want the first degree fields, they're recursively defined anyway
     expect(p.accept('137 | int *[5] a'), false); // bad spacing

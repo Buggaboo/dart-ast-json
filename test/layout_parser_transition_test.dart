@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
-import 'package:petitparser/petitparser.dart';
+import "test_helpers.dart" show StringHelper;
 
 final everything =
 '''
@@ -163,8 +163,103 @@ fields:
   extendedSize: extendedSize, unsigned short, null, null, null
   validBitsPerSample: validBitsPerSample, unsigned short, null, null, null
   channelMask: channelMask, unsigned int, null, null, null
-  subFormat: subFormat, drwav_uint8 [16], null, null, null
- '''.trim();
+  subFormat: subFormat, drwav_uint8 [16], null, null, null''';
+
+final irgen2irgen =
+'''
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb2090cdfd8 </pyminiaudio/miniaudio/dr_flac.h:378:9, line:383:1> line:378:9 struct definition
+|-MaxFieldAlignmentAttr 0x7fb2090ce080 <<invalid sloc>> Implicit 16
+|-FieldDecl 0x7fb2090ce0e8 <line:380:5, col:19> col:19 referenced firstPCMFrame 'drflac_uint64':'unsigned long long'
+|-FieldDecl 0x7fb2090ce148 <line:381:5, col:19> col:19 referenced flacFrameOffset 'drflac_uint64':'unsigned long long'
+`-FieldDecl 0x7fb2090ce1d0 <line:382:5, col:19> col:19 referenced pcmFrameCount 'drflac_uint16':'unsigned short'
+
+Layout: <CGRecordLayout
+  LLVMType:%struct.drflac_seekpoint = type <{ i64, i64, i16 }>
+  IsZeroInitializable:1
+  BitFields:[
+]>
+
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb2090d5f78 </pyminiaudio/miniaudio/dr_flac.h:430:9, line:434:9> line:430:9 struct definition
+|-FieldDecl 0x7fb2090d6030 <line:432:13, col:27> col:27 referenced seekpointCount 'drflac_uint32':'unsigned int'
+`-FieldDecl 0x7fb2090d6108 <line:433:13, col:37> col:37 referenced pSeekpoints 'const drflac_seekpoint *'
+
+Layout: <CGRecordLayout
+  LLVMType:%struct.anon.1 = type { i32, %struct.drflac_seekpoint* }
+  IsZeroInitializable:1
+  BitFields:[
+]>''';
+
+final irgen2irgenCheck =
+'''
+records#: 4
+keys:
+  /pyminiaudio/miniaudio/dr_flac.h:378:9
+  drflac_seekpoint
+  /pyminiaudio/miniaudio/dr_flac.h:430:9
+  struct_anon_1
+values:
+  /pyminiaudio/miniaudio/dr_flac.h:378:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/dr_flac.h:378:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/dr_flac.h:430:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/dr_flac.h:430:9, false, RecordType.struct, null
+fields:
+  firstPCMFrame: firstPCMFrame, unsigned long long, null, null, null
+  flacFrameOffset: flacFrameOffset, unsigned long long, null, null, null
+  pcmFrameCount: pcmFrameCount, unsigned short, null, null, null
+
+  firstPCMFrame: firstPCMFrame, unsigned long long, null, null, null
+  flacFrameOffset: flacFrameOffset, unsigned long long, null, null, null
+  pcmFrameCount: pcmFrameCount, unsigned short, null, null, null
+
+  seekpointCount: seekpointCount, unsigned int, null, null, null
+  pSeekpoints: pSeekpoints, const drflac_seekpoint *, null, null, null
+
+  seekpointCount: seekpointCount, unsigned int, null, null, null
+  pSeekpoints: pSeekpoints, const drflac_seekpoint *, null, null, null''';
+
+final astKeyTestInput =
+'''
+*** Dumping AST Record Layout
+         0 | union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)
+         0 |   struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix
+         0 |     sem_t semaphore
+         0 |   int _unused
+           | [sizeof=4, align=4]
+
+*** Dumping AST Record Layout
+         0 | ma_semaphore
+         0 |   ma_context * pContext
+         8 |   union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)
+         8 |     struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix
+         8 |       sem_t semaphore
+         8 |     int _unused
+           | [sizeof=16, align=8]
+
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb20b27d9d0 </pyminiaudio/miniaudio/miniaudio.h:2967:9, line:2970:9> line:2967:9 struct definition
+`-FieldDecl 0x7fb20b27da80 <line:2969:13, col:19> col:19 referenced semaphore 'sem_t':'int'
+
+Layout: <CGRecordLayout
+  LLVMType:%struct.anon.49 = type { i32 }
+  IsZeroInitializable:1
+  BitFields:[
+]>
+
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb20b27d930 </pyminiaudio/miniaudio/miniaudio.h:2958:5, line:2973:5> line:2958:5 union definition
+|-RecordDecl 0x7fb20b27d9d0 <line:2967:9, line:2970:9> line:2967:9 struct definition
+| `-FieldDecl 0x7fb20b27da80 <line:2969:13, col:19> col:19 referenced semaphore 'sem_t':'int'
+|-FieldDecl 0x7fb20b27db28 <line:2967:9, line:2970:11> col:11 referenced posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+`-FieldDecl 0x7fb20b27db90 <line:2972:9, col:13> col:13 _unused 'int'
+
+Layout: <CGRecordLayout
+  LLVMType:%union.anon.48 = type { %struct.anon.49 }
+  IsZeroInitializable:1
+  BitFields:[
+]>''';
+
 
 interrogateFields(Map<String, Field> fields) =>
   fields.keys.map((k) => '  $k: ${fields[k]}').toList().join('\n');
@@ -177,12 +272,12 @@ interrogateRecord(Map<String, Record> records) =>
   ;
 
 void main() {
-  test("parser state transition", () async {
+  test("parser state transition", () {
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
 
-    final list = everything.split('\n').map((l) => l.trim()).toList();
-    layoutParser(astRecords, irgenRecords, list);
+    final list = everything.splitMapTrim();
+    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, list);
 
     // The doubles in IRgen point to the same object
     expect(
@@ -191,8 +286,26 @@ void main() {
       check);
 
 //    print(
-//      '${interrogateRecord(astRecords)}\n'
-//      '${interrogateRecord(irgenRecords)}'.trim(),
-//    );
+//        '${interrogateRecord(astRecords)}\n'
+//        '${interrogateRecord(irgenRecords)}'.trim());
+  });
+
+  test('irgen to irgen transition', () {
+    final irgenRecords = <String, Record>{};
+    layoutParser([ IRgenRecordLayoutPatterns.first ], {}, irgenRecords, irgen2irgen.splitMapTrim());
+
+    expect(
+        '${interrogateRecord(irgenRecords)}'.trim(),
+        irgen2irgenCheck);
+
+  });
+
+  test('missing ast key', () {
+    final astRecords = <String, Record>{};
+    final irgenRecords = <String, Record>{};
+    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, astKeyTestInput.splitMapTrim());
+//    print(interrogateRecord(astRecords));
+//    print('---');
+//    print(interrogateRecord(irgenRecords));
   });
 }

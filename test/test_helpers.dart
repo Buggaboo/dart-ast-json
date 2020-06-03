@@ -6,3 +6,7 @@ extension ListDynamic on List<dynamic> {
     return true;
   }
 }
+
+extension StringHelper on String {
+  List<String> splitMapTrim() => this.split('\n').map((l) => l.trim()).toList();
+}

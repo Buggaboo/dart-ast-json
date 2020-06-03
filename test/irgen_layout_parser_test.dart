@@ -139,6 +139,7 @@ final trickyIrgenFields =
 
 final LLVMTypes =
 """
+LLVMType:%struct.drflac_seekpoint = type <{ i64, i64, i16 }>
 LLVMType:%struct.Floor1 = type { i8, [32 x i8], [16 x i8], [16 x i8], [16 x i8], [16 x [8 x i16]], [250 x i16], [250 x i8], [250 x [2 x i8]], i8, i8, i32 }
 LLVMType:%union.Floor = type { %struct.Floor1 }
 LLVMType:%struct.Residue = type { i32, i32, i32, i8, i8, i8**, [8 x i16]* }
