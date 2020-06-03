@@ -23,7 +23,7 @@ class StructC extends Struct {
 extension StructTest on StructB {
   Pointer<Uint64> get ptrInt =>
       __origin__.elementAt(offsetPtr).cast<Uint64>();
-  void set ptrInt(int value) =>
+  void set ptrIntValue(int value) =>
       __origin__.elementAt(offsetPtr).cast<Uint64>().value = value;
 
   // 8 byte == sizeof(Pointer on 64 bits machine)
@@ -41,7 +41,7 @@ extension StructFromAddressOf on StructC {
 
   Pointer<Uint64> get ptrInt =>
       __addr__.elementAt(offsetPtr).cast<Uint64>();
-  void set ptrInt(int value) =>
+  void set ptrIntValue(int value) =>
       __addr__.elementAt(offsetPtr).cast<Uint64>().value = value;
 
   int get tInt =>
