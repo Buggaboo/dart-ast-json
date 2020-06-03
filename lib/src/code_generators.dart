@@ -373,17 +373,38 @@ String Function(Record) declareClassFromIrgenRecords(Map<String, Record> ast,
   Map<String, Record> irgen, Logger log) {
 
   return (Record record) {
-    final offsets = record.fields.values.toList()
+
+    final isUnion = record.type == RecordType.union;
+    if (isUnion) {
+      return
+          '// union'
+          'class ${record.generatedName} extends Struct {'
+          '}\n\n';
+    }
+
+    final astRecord = ast[record.identifier] ?? ast[record.generatedName];
+
+//    log.info ('keys:');
+//    log.info (ast.keys.join(', '));
+
+    if (astRecord == null) {
+      log.warning("No offsets found for ${record} with keys: ${record.identifier} ${record.generatedName}");
+//      print('keys found: ${ast.keys.where((k) => k.contains(record.identifier) || k.contains(record.identifier)).toList()}');
+    }
+
+    final offsets = astRecord.fields.values.toList()
       ..sort((s, t) => s.offset.compareTo(t.offset))..join(', ');
 
     return
       'class ${record.generatedName} {'
-        '  Pointer<Uint8> __origin__;' // offsets from AST are in bytes
-        '}\n\n'
-        'extension on ${record.generatedName} {'
-        '  final static byteOffsets = [ ${offsets} ];'
-        '}\n\n';
+      '  Pointer<Uint8> __origin__;' // offsets from AST are in bytes
+      '}\n\n'
+      'extension on ${record.generatedName} {'
+      '  final static byteOffsets = [ ${offsets} ];'
+      '}\n\n';
   };
+
+
 }
 
 String sortIrgenRecords(Map<String, Record> ast, Map<String, Record> irgen, Logger log) {

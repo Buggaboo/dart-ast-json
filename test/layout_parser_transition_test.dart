@@ -260,6 +260,165 @@ Layout: <CGRecordLayout
   BitFields:[
 ]>''';
 
+final implicit =
+'''
+*** Dumping AST Record Layout
+         0 | union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)
+         0 |   struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix
+         0 |     sem_t semaphore
+         0 |   int _unused
+           | [sizeof=4, align=4]
+
+*** Dumping AST Record Layout
+         0 | ma_semaphore
+         0 |   ma_context * pContext
+         8 |   union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)
+         8 |     struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix
+         8 |       sem_t semaphore
+         8 |     int _unused
+           | [sizeof=16, align=8]
+           
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb20b27d9d0 </pyminiaudio/miniaudio/miniaudio.h:2967:9, line:2970:9> line:2967:9 struct definition
+`-FieldDecl 0x7fb20b27da80 <line:2969:13, col:19> col:19 referenced semaphore 'sem_t':'int'
+
+Layout: <CGRecordLayout
+  LLVMType:%struct.anon.49 = type { i32 }
+  IsZeroInitializable:1
+  BitFields:[
+]>
+
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb20b27d930 </pyminiaudio/miniaudio/miniaudio.h:2958:5, line:2973:5> line:2958:5 union definition
+|-RecordDecl 0x7fb20b27d9d0 <line:2967:9, line:2970:9> line:2967:9 struct definition
+| `-FieldDecl 0x7fb20b27da80 <line:2969:13, col:19> col:19 referenced semaphore 'sem_t':'int'
+|-FieldDecl 0x7fb20b27db28 <line:2967:9, line:2970:11> col:11 referenced posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+`-FieldDecl 0x7fb20b27db90 <line:2972:9, col:13> col:13 _unused 'int'
+
+Layout: <CGRecordLayout
+  LLVMType:%union.anon.48 = type { %struct.anon.49 }
+  IsZeroInitializable:1
+  BitFields:[
+]>
+
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb20b27d828 </pyminiaudio/miniaudio/miniaudio.h:2954:9, line:2974:1> line:2954:9 struct definition
+|-FieldDecl 0x7fb20b27d8e0 <line:2956:5, col:17> col:17 pContext 'ma_context *'
+|-RecordDecl 0x7fb20b27d930 <line:2958:5, line:2973:5> line:2958:5 union definition
+| |-RecordDecl 0x7fb20b27d9d0 <line:2967:9, line:2970:9> line:2967:9 struct definition
+| | `-FieldDecl 0x7fb20b27da80 <line:2969:13, col:19> col:19 referenced semaphore 'sem_t':'int'
+| |-FieldDecl 0x7fb20b27db28 <line:2967:9, line:2970:11> col:11 referenced posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+| `-FieldDecl 0x7fb20b27db90 <line:2972:9, col:13> col:13 _unused 'int'
+|-FieldDecl 0x7fb20b27dc88 <line:2958:5> col:5 implicit referenced 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'
+|-IndirectFieldDecl 0x7fb20b27dce8 <line:2970:11> col:11 implicit posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+| |-Field 0x7fb20b27dc88 '' 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'
+| `-Field 0x7fb20b27db28 'posix' 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+`-IndirectFieldDecl 0x7fb20b27dd40 <line:2972:13> col:13 implicit _unused 'int'
+  |-Field 0x7fb20b27dc88 '' 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'
+  `-Field 0x7fb20b27db90 '_unused' 'int'
+
+Layout: <CGRecordLayout
+  LLVMType:%struct.ma_semaphore = type { %struct.ma_context*, %union.anon.48 }
+  IsZeroInitializable:1
+  BitFields:[
+]>''';
+
+final implicitCheck =
+'''
+records#: 2
+keys:
+  /pyminiaudio/miniaudio/miniaudio.h:2958:5
+  ma_semaphore
+values:
+  /pyminiaudio/miniaudio/miniaudio.h:2958:5, true, RecordType.union, ma_semaphore
+  ma_semaphore, false, null, null
+fields:
+  posix: posix, /pyminiaudio/miniaudio/miniaudio.h:2967:9, 0, null, null
+  _unused: _unused, int, 0, null, null
+
+  pContext: pContext, ma_context *, 0, null, null
+records#: 6
+keys:
+  /pyminiaudio/miniaudio/miniaudio.h:2967:9
+  struct_anon_49
+  /pyminiaudio/miniaudio/miniaudio.h:2958:5
+  union_anon_48
+  /pyminiaudio/miniaudio/miniaudio.h:2954:9
+  ma_semaphore
+values:
+  /pyminiaudio/miniaudio/miniaudio.h:2967:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/miniaudio.h:2967:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/miniaudio.h:2958:5, false, RecordType.union, null
+  /pyminiaudio/miniaudio/miniaudio.h:2958:5, false, RecordType.union, null
+  /pyminiaudio/miniaudio/miniaudio.h:2954:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/miniaudio.h:2954:9, false, RecordType.struct, null
+fields:
+  semaphore: semaphore, int, null, null, null
+
+  semaphore: semaphore, int, null, null, null
+
+  posix: posix, /pyminiaudio/miniaudio/miniaudio.h:2967:9, null, null, null
+  _unused: _unused, int, null, null, null
+
+  posix: posix, /pyminiaudio/miniaudio/miniaudio.h:2967:9, null, null, null
+  _unused: _unused, int, null, null, null
+
+  pContext: pContext, ma_context *, null, null, null
+
+  pContext: pContext, ma_context *, null, null, null''';
+
+final annoyingUnion = '''
+*** Dumping AST Record Layout
+         0 | ma_semaphore
+         0 |   ma_context * pContext
+         8 |   union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)
+         8 |     struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix
+         8 |       sem_t semaphore
+         8 |     int _unused
+           | [sizeof=16, align=8]
+
+*** Dumping IRgen Record Layout
+Record: RecordDecl 0x7fb20b27d828 </pyminiaudio/miniaudio/miniaudio.h:2954:9, line:2974:1> line:2954:9 struct definition
+|-FieldDecl 0x7fb20b27d8e0 <line:2956:5, col:17> col:17 pContext 'ma_context *'
+|-RecordDecl 0x7fb20b27d930 <line:2958:5, line:2973:5> line:2958:5 union definition
+| |-RecordDecl 0x7fb20b27d9d0 <line:2967:9, line:2970:9> line:2967:9 struct definition
+| | `-FieldDecl 0x7fb20b27da80 <line:2969:13, col:19> col:19 referenced semaphore 'sem_t':'int'
+| |-FieldDecl 0x7fb20b27db28 <line:2967:9, line:2970:11> col:11 referenced posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+| `-FieldDecl 0x7fb20b27db90 <line:2972:9, col:13> col:13 _unused 'int'
+|-FieldDecl 0x7fb20b27dc88 <line:2958:5> col:5 implicit referenced 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'
+|-IndirectFieldDecl 0x7fb20b27dce8 <line:2970:11> col:11 implicit posix 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+| |-Field 0x7fb20b27dc88 '' 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'
+| `-Field 0x7fb20b27db28 'posix' 'struct (anonymous struct at /pyminiaudio/miniaudio/miniaudio.h:2967:9)':'struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9)'
+`-IndirectFieldDecl 0x7fb20b27dd40 <line:2972:13> col:13 implicit _unused 'int'
+  |-Field 0x7fb20b27dc88 '' 'union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)'
+  `-Field 0x7fb20b27db90 '_unused' 'int'
+
+Layout: <CGRecordLayout
+  LLVMType:%struct.ma_semaphore = type { %struct.ma_context*, %union.anon.48 }
+  IsZeroInitializable:1
+  BitFields:[
+]>''';
+
+final annoyingUnionCheck =
+'''
+records#: 1
+keys:
+  ma_semaphore
+values:
+  ma_semaphore, false, null, null
+fields:
+  pContext: pContext, ma_context *, 0, null, null
+records#: 2
+keys:
+  /pyminiaudio/miniaudio/miniaudio.h:2954:9
+  ma_semaphore
+values:
+  /pyminiaudio/miniaudio/miniaudio.h:2954:9, false, RecordType.struct, null
+  /pyminiaudio/miniaudio/miniaudio.h:2954:9, false, RecordType.struct, null
+fields:
+  pContext: pContext, ma_context *, null, null, null
+
+  pContext: pContext, ma_context *, null, null, null''';
 
 interrogateFields(Map<String, Field> fields) =>
   fields.keys.map((k) => '  $k: ${fields[k]}').toList().join('\n');
@@ -300,12 +459,34 @@ void main() {
 
   });
 
-  test('missing ast key', () {
+  test('implicitly referenced record', () {
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
-    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, astKeyTestInput.splitMapTrim());
+    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, implicit.splitMapTrim());
+
 //    print(interrogateRecord(astRecords));
 //    print('---');
 //    print(interrogateRecord(irgenRecords));
+
+    expect(
+        '${interrogateRecord(astRecords)}\n'
+            '${interrogateRecord(irgenRecords)}'.trim(),
+        implicitCheck);
+  });
+  
+  test('annoying union', () {
+    final astRecords = <String, Record>{};
+    final irgenRecords = <String, Record>{};
+    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, annoyingUnion.splitMapTrim());
+
+
+//    print(interrogateRecord(astRecords));
+//    print('---');
+//    print(interrogateRecord(irgenRecords));
+
+    expect(
+        '${interrogateRecord(astRecords)}\n'
+        '${interrogateRecord(irgenRecords)}'.trim(),
+        annoyingUnionCheck);
   });
 }

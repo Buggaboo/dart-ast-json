@@ -16,14 +16,15 @@ final digitPlusFlatten = digitPlus.flatten();
 final pointer = char('*');
 final array = (char('[') & digitPlus & char(']')).flatten();
 final basicType = (char('_').star() & letter() & word().star()).flatten();
-final type = (string('const ').optional() | string('volatile ')) & basicType &
+final fieldName = basicType.plus().flatten(); // same
+final type = (string('struct ') | string('union ') | string('const ').optional() | string('volatile ')) & basicType &
   (space & pointer.star().flatten() & array.star().flatten()).optional();
 
 // TODO reimplement as: fnPtr = undefined(); fnPtr.set(...);
 // let's hope we never bump into a fn ptr, with a fn ptr as an argument
 // we have an extractor tho...
 final fnPtr = (basicType & (space & pointer.star()).flatten() &
-string('(*)(') & type & (string(', ') & type).star() & char(')')).flatten();
+(string('(*)(') | (string('(* ') & basicType & string(')('))) & type & (string(', ') & type).star() & char(')')).flatten();
 
 // TODO replace some of the picks with 'and', to get rid of awkward parentheses
 class AstRecordLayoutPatterns {
@@ -40,9 +41,9 @@ class AstRecordLayoutPatterns {
   static final offsets = offsetBitFieldRange | digitPlusFlatten;
   static final fieldPattern = (offsets & string(' |   ')).pick(0) &
     (
-      (anonAndNested & space & word().plus()) |
-      (fnPtr & space & word().plus()) |
-      (word() & noneOf(')').plus() & char(')').end().not().optional())
+      (fnPtr & space & fieldName) |
+//      (letter() & noneOf(')').plus() & (char(')').end().not() | (string(') ')) & fieldName))
+      (letter() & noneOf(')').plus() & ((string(') ') & fieldName) | char(')').end().not()).flatten())
     ).flatten();
 
   static final last = (string('| [sizeof=') & digitPlusFlatten).pick(1) & (string(', align=') & digitPlusFlatten & char(']')).pick(1);
@@ -71,7 +72,8 @@ class IRgenRecordLayoutPatterns {
 
   static final fieldPattern = ((string('`-FieldDecl ') | string('|-FieldDecl ')) & hexId).pick(1) &
     ((string(' <') & noneOf('>').plus() & string('> ') & colNumber).flatten() &
-    (string(' implicit referenced ') | string(' implicit ')).not() &
+//    (string(' implicit referenced ').not() | string(' implicit ').not()) &
+    string(' implicit ').not() &
     (string(' referenced ') | space) & wordPlusFlatten).pick(3) &
     (
       (startApost & nonOfApostPlus & middleApost & nonOfApostPlus & endApost).pick(3) |
@@ -117,6 +119,14 @@ class Field {
       AstRecordLayoutPatterns.anon).parse(typeSplit);
 
     final type = anonTypeResult.isSuccess ? anonTypeResult.value[2] : typeSplit;
+
+//    // TODO remove start
+//    print ('r1: $r1');
+//    print ('split: $split');
+//    print ('name: $name');
+//    print ('typesplit: $typeSplit');
+//    print ('type: $type');
+//    // TODO remove end
 
     if (result[0] is List<dynamic>) {
       List<dynamic> rr = result[0];
@@ -275,6 +285,22 @@ void layoutParser(List<Parser> patterns, Map<String, Record> astRecords, Map<Str
   int fieldCounter = 0;
   int irgenCounter = 0;
 
+//    // TODO remove from here
+//    final parserName = <Parser, String>{};
+//    parserName[AstRecordLayoutPatterns.first] = 'astFirst';
+//    parserName[AstRecordLayoutPatterns.second] = 'astSecond';
+//    parserName[AstRecordLayoutPatterns.fieldPattern] = 'astField';
+//    parserName[AstRecordLayoutPatterns.last] = 'astLast';
+//
+//    parserName[CGRecordLayoutPatterns.first] = 'cgFirst';
+//    parserName[CGRecordLayoutPatterns.recordType] = 'cgRecordType';
+//    parserName[CGRecordLayoutPatterns.LLVMTypePattern] = 'cgLLVM';
+//    parserName[CGRecordLayoutPatterns.last] = 'cgLast';
+//
+//    parserName[IRgenRecordLayoutPatterns.first] = 'irgenFirst';
+//    parserName[IRgenRecordLayoutPatterns.second] = 'irgenSecond';
+//    parserName[IRgenRecordLayoutPatterns.fieldPattern] = 'irgenField';
+
   for (var _line in lines) {
     final line = _line.trim();
     if (line.isEmpty) { continue; }
@@ -282,6 +308,14 @@ void layoutParser(List<Parser> patterns, Map<String, Record> astRecords, Map<Str
     // fold and reduce, required more noodling, due to case where all fail (i.e. skipping)
     final accepted = patterns.where((p) => p.accept(line)).toList();
     if (accepted.isEmpty) { continue; } // skip all 1> degree fields (i.e. nested)
+
+//    final accepted = patterns.where((p) => p.accept(line)).toList();
+//    if (accepted.isEmpty) {
+//      print('patterns: ${patterns.map((p) => parserName[p]).toList().join(' | ')}');
+//      print('skipping line: $line');
+//      continue;
+//    } // skip all 1> degree fields (i.e. nested)
+    // TODO clean up
 
     final pattern = accepted[0];
 

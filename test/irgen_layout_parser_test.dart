@@ -242,7 +242,9 @@ void main() {
     }
 
     for (int i=0; i<trickyIrgenFields.length; i++) {
-      expect(fieldPattern.accept(trickyIrgenFields[i]), false);
+      if (fieldPattern.accept(trickyIrgenFields[i])) {
+        fail('accepted: ${trickyIrgenFields[i]} (noooo...)');
+      }
     }
 
     // first line

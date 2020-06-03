@@ -1,8 +1,9 @@
 import 'package:test/test.dart';
 import 'package:dart_ast_json/src/layout_parser.dart';
 import 'package:petitparser/petitparser.dart' show AcceptParser;
+import 'test_helpers.dart' show StringHelper;
 
-final fields =
+final acceptedFields =
 """
          0 |   void (*)(int) __sa_handler
          0 |   void (*)(int, struct __siginfo *, void *) __sa_sigaction
@@ -496,11 +497,9 @@ final fields =
          0 |   struct ma_thread::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2899:9) posix
          0 |   int _unused
          0 |   ma_context * pContext
-         8 |   union ma_thread::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2890:5) 
          0 |   struct ma_event::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2943:9) posix
          0 |   int _unused
          0 |   ma_context * pContext
-         8 |   union ma_event::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2934:5) 
          0 |   ma_rb rb
         64 |   ma_format format
         68 |   ma_uint32 channels
@@ -547,7 +546,6 @@ final fields =
          0 |   struct ma_mutex::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2921:9) posix
          0 |   int _unused
          0 |   ma_context * pContext
-         8 |   union ma_mutex::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2912:5) 
          0 |   int _unused
          0 |   struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3485:9) coreaudio
          0 |   struct ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3594:9) null_backend
@@ -574,8 +572,6 @@ final fields =
        288 |   ma_result (*)(ma_device *) onDeviceStart
        296 |   ma_result (*)(ma_device *) onDeviceStop
        304 |   ma_result (*)(ma_device *) onDeviceMainLoop
-       312 |   union ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3300:5) 
-       488 |   union ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3601:5) 
          0 |   ma_uint32 lpfOrder
          0 |   int quality
          0 |   ma_resample_algorithm algorithm
@@ -672,7 +668,6 @@ final fields =
        532 |   struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3671:5) resampling
        544 |   struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3683:5) playback
      11000 |   struct ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3701:5) capture
-     21456 |   union ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3720:5) 
          0 |   long __sig
          8 |   struct __darwin_pthread_handler_rec * __cleanup_stack
         16 |   char [8176] __opaque
@@ -740,7 +735,6 @@ final fields =
          0 |   struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix
          0 |   int _unused
          0 |   ma_context * pContext
-         8 |   union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5) 
          0 |   ma_device_type deviceType
          8 |   const ma_device_id * pDeviceID
         16 |   char * pName
@@ -1274,16 +1268,40 @@ final fields =
          8 |   UInt32 mNumberChannelDescriptions
         12 |   AudioChannelDescription [1] mChannelDescriptions""";
 
-void main() {
-  test("first degree field", () {
-    final fieldPattern = AstRecordLayoutPatterns.fieldPattern;
+final rejectedFields =
+'''
+         8 |   union ma_thread::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2890:5)        
+         8 |   union ma_event::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2934:5)
+         8 |   union ma_mutex::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2912:5)
+       312 |   union ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3300:5) 
+       488 |   union ma_context::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3601:5)
+     21456 |   union ma_device::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:3720:5)
+         8 |   union ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2958:5)
+         8 |     struct ma_semaphore::(anonymous at /pyminiaudio/miniaudio/miniaudio.h:2967:9) posix          
+''';
 
-    final f = fields.split('\n');
+final fieldPattern = AstRecordLayoutPatterns.fieldPattern;
+
+void main() {
+
+  test("first degree field, accepted", () {
+    final f = acceptedFields.splitMapTrim();
     for (int i=0; i<f.length; i++) {
       var trim = f[i].trim();
 
       if (!fieldPattern.accept(trim)) {
         fail('Failed at line $i, with:\n"${f[i]}"');
+      }
+    }
+  });
+
+  test("first degree field, rejected", () {
+    final f = rejectedFields.splitMapTrim();
+    for (int i=0; i<f.length; i++) {
+      var trim = f[i].trim();
+
+      if (fieldPattern.accept(trim)) {
+        fail('Accepted at line $i, with:\n"${f[i]}"');
       }
     }
   });
