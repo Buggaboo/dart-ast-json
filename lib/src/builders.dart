@@ -301,6 +301,10 @@ class ExtensionBuilder with DeclUtil implements Builder {
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
     layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, lines);
+
+    log.info('ast size: ${astRecords.keys.length}');
+    log.info('irgen size: ${irgenRecords.keys.length / 2.0}');
+
     await step.writeAsString(inputId.changeExtension(output),
       declareExtensions(inputId.root, astRecords, irgenRecords, log));
   }

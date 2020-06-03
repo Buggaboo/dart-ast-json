@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:petitparser/petitparser.dart';
 
 final space = char(' ');
@@ -279,36 +281,57 @@ void layoutParser(List<Parser> patterns, Map<String, Record> astRecords, Map<Str
   int fieldCounter = 0;
   int irgenCounter = 0;
 
-//    // TODO remove from here
-//    final parserName = <Parser, String>{};
-//    parserName[AstRecordLayoutPatterns.first] = 'astFirst';
-//    parserName[AstRecordLayoutPatterns.second] = 'astSecond';
-//    parserName[AstRecordLayoutPatterns.fieldPattern] = 'astField';
-//    parserName[AstRecordLayoutPatterns.last] = 'astLast';
-//
-//    parserName[CGRecordLayoutPatterns.first] = 'cgFirst';
-//    parserName[CGRecordLayoutPatterns.recordType] = 'cgRecordType';
-//    parserName[CGRecordLayoutPatterns.LLVMTypePattern] = 'cgLLVM';
-//    parserName[CGRecordLayoutPatterns.last] = 'cgLast';
-//
-//    parserName[IRgenRecordLayoutPatterns.first] = 'irgenFirst';
-//    parserName[IRgenRecordLayoutPatterns.second] = 'irgenSecond';
-//    parserName[IRgenRecordLayoutPatterns.fieldPattern] = 'irgenField';
+  // TODO remove from here
+  final parserName = <Parser, String>{};
+  parserName[AstRecordLayoutPatterns.first] = 'astFirst';
+  parserName[AstRecordLayoutPatterns.second] = 'astSecond';
+  parserName[AstRecordLayoutPatterns.fieldPattern] = 'astField';
+  parserName[AstRecordLayoutPatterns.last] = 'astLast';
+
+  parserName[CGRecordLayoutPatterns.first] = 'cgFirst';
+  parserName[CGRecordLayoutPatterns.recordType] = 'cgRecordType';
+  parserName[CGRecordLayoutPatterns.LLVMTypePattern] = 'cgLLVM';
+  parserName[CGRecordLayoutPatterns.last] = 'cgLast';
+
+  parserName[IRgenRecordLayoutPatterns.first] = 'irgenFirst';
+  parserName[IRgenRecordLayoutPatterns.second] = 'irgenSecond';
+  parserName[IRgenRecordLayoutPatterns.fieldPattern] = 'irgenField';
+
+  // TODO remove, or add as closures
+  var file = new File('skipped.txt');
+  var sink = file.openWrite();
 
   for (var _line in lines) {
     final line = _line.trim();
     if (line.isEmpty) { continue; }
 
     // fold and reduce, required more noodling, due to case where all fail (i.e. skipping)
-    final accepted = patterns.where((p) => p.accept(line)).toList();
-    if (accepted.isEmpty) { continue; } // skip all 1> degree fields (i.e. nested)
-
 //    final accepted = patterns.where((p) => p.accept(line)).toList();
 //    if (accepted.isEmpty) {
-//      print('patterns: ${patterns.map((p) => parserName[p]).toList().join(' | ')}');
-//      print('skipping line: $line');
 //      continue;
 //    } // skip all 1> degree fields (i.e. nested)
+
+    final accepted = patterns.where((p) => p.accept(line)).toList();
+    if (accepted.isEmpty) {
+//      print('patterns: ${patterns.map((p) => parserName[p]).toList().join(' | ')}');
+//      print('skipping line: $line');
+//      sink.write('FILE ACCESSED ${new DateTime.now()}\n');
+      final scannedPatterns = patterns.map((p) => parserName[p]).toList();
+      var notice = '';
+      if (line.contains('invalid') || scannedPatterns.contains('irgenSecond') && line.startsWith('Record: ')) {
+        notice = '!!!';
+      }
+
+      sink.write('patterns: ${scannedPatterns.join(' | ')}\n');
+      sink.write('${notice}skipping line: $line\n');
+
+      // bail out
+      if (line.contains('invalid') && scannedPatterns.contains('irgenSecond')) {
+        patterns = [ CGRecordLayoutPatterns.last ]; // exit
+      }
+
+      continue;
+    } // skip all 1> degree fields (i.e. nested)
     // TODO clean up
 
     final pattern = accepted[0];
@@ -342,4 +365,6 @@ void layoutParser(List<Parser> patterns, Map<String, Record> astRecords, Map<Str
     patterns = transitions[pattern];
 
   }
+
+  sink.close();
 }

@@ -393,7 +393,8 @@ String Function(Record) declareClassFromIrgenRecords(Map<String, Record> ast,
     }
 
     final offsets = astRecord.fields.values.toList()
-      ..sort((s, t) => s.offset.compareTo(t.offset))..join(', ');
+      ..sort((s, t) => s.offset.compareTo(t.offset))
+      ..map((s) => s.offset).toList().join(', ');
 
     return
       'class ${record.generatedName} {'
