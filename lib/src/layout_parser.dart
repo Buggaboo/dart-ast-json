@@ -43,7 +43,7 @@ class AstRecordLayoutPatterns {
     (
       (fnPtr & space & fieldName) |
 //      (letter() & noneOf(')').plus() & (char(')').end().not() | (string(') ')) & fieldName))
-      (letter() & noneOf(')').plus() & ((string(') ') & fieldName) | char(')').end().not()).flatten())
+      (char('_').star() & letter() & noneOf(')').plus() & ((string(') ') & fieldName) | char(')').end().not()).flatten())
     ).flatten();
 
   static final last = (string('| [sizeof=') & digitPlusFlatten).pick(1) & (string(', align=') & digitPlusFlatten & char(']')).pick(1);

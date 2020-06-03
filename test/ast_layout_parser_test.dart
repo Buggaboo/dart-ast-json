@@ -190,7 +190,8 @@ void main() {
   final trickyLines = [
     '88 |   const void * pData',
     '32 |   drflac_subframe [8] subframes',
-    '48 |   void *(*)(void *, size_t, void *) onRealloc'
+    '48 |   void *(*)(void *, size_t, void *) onRealloc',
+    '10 |   __uint64_t __rax'
   ];
 
   test("read offsets, get names from first degree fields", () {
