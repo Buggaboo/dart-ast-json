@@ -300,13 +300,51 @@ class ExtensionBuilder with DeclUtil implements Builder {
     final lines = await File(inputId.path).readAsLines();
     final astRecords = <String, Record>{};
     final irgenRecords = <String, Record>{};
-    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, lines);
+
+    var file = new File('skipped.txt');
+    var sink = file.openWrite();
+    layoutParser([ AstRecordLayoutPatterns.first ], astRecords, irgenRecords, lines, log, sink);
+    sink.close();
 
     log.info('ast size: ${astRecords.keys.length}');
     log.info('irgen size: ${irgenRecords.keys.length / 2.0}');
 
     await step.writeAsString(inputId.changeExtension(output),
       declareExtensions(inputId.root, astRecords, irgenRecords, log));
+
+    file = new File('types.txt');
+    sink = file.openWrite();
+    final types = <String>[];
+    final unions = <String>[];
+    final structs = <String>[];
+
+    irgenRecords.values.forEach((i) {
+      i.fields.values.forEach((j) {
+        types.add(j.desugaredType);
+      });
+      i.type == RecordType.union ?
+        unions.add(i.generatedName) :
+        structs.add(i.generatedName);
+    });
+
+    types.toSet().toList()..sort()..forEach((k) => sink.write("$k\n"));
+
+    sink.write('===\n');
+    structs.toSet().toList()..sort()..forEach((e) => sink.write('$e\n'));
+    sink.write('===\n');
+    unions.toSet().toList()..sort()..forEach((e) => sink.write('$e\n'));
+
+    sink.close();
+
+    file = new File('anontypes.txt');
+    sink = file.openWrite();
+    irgenRecords.values.where((v) => v.identifier != v.generatedName)
+        .toSet().toList()
+      ..sort((s, t) => s.counter.compareTo(t.counter))
+      ..forEach((e) {
+      sink.write('"${e.identifier}" : "${e.generatedName}"\n');
+    });
+    sink.close();
   }
 }
 

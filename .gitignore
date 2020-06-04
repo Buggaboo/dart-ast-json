@@ -22,7 +22,11 @@ doc/api/
 
 # don't commit the original AST unless forced
 *.json
-*.g.dart
+*.s.dart
+*.x.dart
+*.t.dart
+*.f.dart
+*.txt
 
 # IDE
 .idea

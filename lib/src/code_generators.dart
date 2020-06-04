@@ -374,34 +374,33 @@ String Function(Record) declareClassFromIrgenRecords(Map<String, Record> ast,
 
   return (Record record) {
 
+    final fieldTypeAndName = record.fields.values.map((v) => '// ${v.desugaredType} ${v.name}\n').join('\n  ');
     final isUnion = record.type == RecordType.union;
     if (isUnion) {
       return
-          '// union'
-          'class ${record.generatedName} extends Struct {'
+          '// union\n'
+          'class ${record.generatedName} extends Struct {\n'
+          '  $fieldTypeAndName\n'
           '}\n\n';
     }
 
     final astRecord = ast[record.identifier] ?? ast[record.generatedName];
 
-//    log.info ('keys:');
-//    log.info (ast.keys.join(', '));
-
     if (astRecord == null) {
       log.warning("No offsets found for ${record} with keys: ${record.identifier} ${record.generatedName}");
-//      print('keys found: ${ast.keys.where((k) => k.contains(record.identifier) || k.contains(record.identifier)).toList()}');
     }
 
-    final offsets = astRecord.fields.values.toList()
-      ..sort((s, t) => s.offset.compareTo(t.offset))
-      ..map((s) => s.offset).toList().join(', ');
+    final astFields = astRecord.fields.values.toList();
+    astFields.sort((s, t) => s.offset.compareTo(t.offset));
+    final offsets = astFields.map((s) => s.offset).toList().join(', ');
 
     return
-      'class ${record.generatedName} {'
-      '  Pointer<Uint8> __origin__;' // offsets from AST are in bytes
+      'class ${record.generatedName} extends Struct {\n'
+      '  Pointer<Uint8> __origin__;\n' // offsets from AST are in bytes
+      '  $fieldTypeAndName\n'
       '}\n\n'
-      'extension on ${record.generatedName} {'
-      '  final static byteOffsets = [ ${offsets} ];'
+      'extension on ${record.generatedName} {\n'
+      '  static final byteOffsets = [ ${offsets} ];\n'
       '}\n\n';
   };
 
@@ -426,7 +425,7 @@ String declareExtensions(String importRoot,
 import 'dart:ffi';
 import "dart:typed_data";
 import "package:ffi/ffi.dart";
-import '$importRoot.t.dart';
+//import '$importRoot.t.dart'; // TODO decide to keep or remove
 
 // ignore_for_file: camel_case_types
 // ignore_for_file: non_constant_identifier_names
