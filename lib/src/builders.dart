@@ -342,7 +342,7 @@ class ExtensionBuilder with DeclUtil implements Builder {
         .toSet().toList()
       ..sort((s, t) => s.counter.compareTo(t.counter))
       ..forEach((e) {
-      sink.write('"${e.identifier}" : "${e.generatedName}"\n');
+      sink.write(', "${e.identifier}" : "${e.generatedName}"\n');
     });
     sink.close();
   }
